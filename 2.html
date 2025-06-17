@@ -1,0 +1,2374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Inventory Management System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      min-height: 100vh;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding-top: 0;
+      background-color: #f5f7fa;
+      position: relative;
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "TECHNOMENS";
+      position: fixed;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 100px;
+      color: rgba(41, 61, 64, 0.15);
+      z-index: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      font-weight: bold;
+    }
+
+    .top-logo {
+      height: 60px;
+      position: absolute;
+      top: 10px;
+    }
+
+    .left-logo {
+      left: 20px;
+    }
+
+    .right-logo {
+      right: 20px;
+    }
+
+    .header {
+      background-color: #f5f7fa;
+      padding: 10px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 3;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      flex-wrap: wrap;
+      gap: 15px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin: 0;
+      color: #2c3e50;
+      font-size: 28px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      margin-top: 15px;
+    }
+
+    .search-input {
+      padding: 12px 40px;
+      border-radius: 25px;
+      border: 1px solid #ddd;
+      width: 100%;
+      font-size: 14px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      transition: all 0.3s;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #777;
+    }
+
+    .main-content {
+      margin-top: 0;
+      padding: 20px;
+    }
+
+    .form-container {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 30px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .form-title {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-title i {
+      color: #4CAF50;
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+      font-size: 14px;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 14px;
+      transition: monitor;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: flex-end;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .submit-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+    }
+
+    .submit-btn:hover {
+      background-color: #3d8b40;
+      transform: translateY(-2px);
+    }
+
+    .dispatch-btn {
+      background-color: #FF9800;
+      color: white;
+      border: none;
+    }
+
+    .dispatch-btn:hover {
+      background-color: #F57C00;
+      transform: translateY(-2px);
+    }
+
+    .issue-btn {
+      background-color: #9C27B0;
+      color: white;
+      border: none;
+    }
+
+    .issue-btn:hover {
+      background-color: #7B1FA2;
+      transform: translateY(-2px);
+    }
+
+    .cancel-btn {
+      background-color: #f5f5f5;
+      color: #555;
+      border: 1px solid #ddd;
+    }
+
+    .cancel-btn:hover {
+      background-color: #eaeaea;
+    }
+
+    .tab-container {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      background-color: #e0e0e0;
+      color: #333;
+      transition: all 0.3s;
+    }
+
+    .tab-btn.active {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .tab-btn:hover {
+      background-color: #d0d0d0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 15px;
+      border: 1px solid #e0e0e0;
+      text-align: center;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+      position: sticky;
+      top: 0;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    tr:hover {
+      background-color: #f0f0f0;
+    }
+
+    .qr {
+      height: 50px;
+      width: auto;
+      max-width: 150px;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .delete-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+    }
+
+    .delete-btn:hover {
+      background-color: #d32f2f;
+      transform: translateY(-2px);
+    }
+
+    .edit-btn {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+    }
+
+    .edit-btn:hover {
+      background-color: #1976D2;
+      transform: translateY(-2px);
+    }
+
+    .status-low {
+      color: #f44336;
+      font-weight: bold;
+    }
+
+    .status-medium {
+      color: #FF9800;
+      font-weight: bold;
+    }
+
+    .status-high {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+
+    .status-approved {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+
+    .status-rejected {
+      color: #f44336;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      color: #FF9800;
+      font-weight: bold;
+    }
+
+    .details-panel {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-top: 30px;
+      position: relative;
+      z-index: 1;
+      display: none;
+    }
+
+    .details-title {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .details-title i {
+      color: #4CAF50;
+    }
+
+    .details-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .detail-item {
+      margin-bottom: 15px;
+    }
+
+    .detail-label {
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .detail-value {
+      background-color: #f9f9f9;
+      padding: 10px;
+      border-radius: 6px;
+      border-left: 4px solid #4CAF50;
+    }
+
+    .spec-value {
+      white-space: pre-wrap;
+      background-color: #f9f9f9;
+      padding: 15px;
+      border-radius: 6px;
+      border-left: 4px solid #4CAF50;
+      grid-column: 1 / -1;
+    }
+
+    .loading-message {
+      text-align: center;
+      padding: 30px;
+      color: #777;
+      font-size: 16px;
+    }
+
+    .chatbot-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+
+    .chatbot-toggle {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: all 0.3s;
+    }
+
+    .back-btn {
+      background-color: #555;
+      color: white;
+      border: none;
+      margin-bottom: 15px;
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+
+    .back-btn:hover {
+      background-color: #444;
+      transform: translateY(-2px);
+    }
+
+    .chatbot-toggle:hover {
+      background-color: #3d8b40;
+      transform: scale(1.1);
+    }
+
+    .chatbot-window {
+      display: none;
+      background: white;
+      width: 320px;
+      max-height: 500px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      overflow: hidden;
+      flex-direction: column;
+      margin-bottom: 10px;
+    }
+
+    .chatbot-header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chatbot-mode-toggle {
+      background: #3d8b40;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .chatbot-mode-toggle:hover {
+      background: #2e7d32;
+    }
+
+    .chatbot-messages {
+      flex-grow: 1;
+      padding: 15px;
+      overflow-y: auto;
+      max-height: 350px;
+      background-color: #f9f9f9;
+    }
+
+    .chatbot-message {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .chatbot-message.user {
+      background-color: #4CAF50;
+      color: white;
+      margin-left: 20%;
+      margin-right: 10px;
+    }
+
+    .chatbot-message.bot {
+      background-color: #e0e0e0;
+      color: #333;
+      margin-right: 20%;
+      margin-left: 10px;
+    }
+
+    .chatbot-input-container {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+
+    .chatbot-input {
+      flex-grow: 1;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+
+    .chatbot-input:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    }
+
+    .chatbot-send {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chatbot-send:hover {
+      background-color: #3d8b40;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .fixed-header-wrapper,
+      .search-container {
+        width: 100%;
+      }
+
+      .form-row {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .action-btns {
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      th, td {
+        padding: 10px 5px;
+        font-size: 13px;
+      }
+
+      .details-content {
+        grid-template-columns: 1fr;
+      }
+
+      .chatbot-window {
+        width: 100%;
+        max-width: 300px;
+        max-height: 400px;
+      }
+
+      .top-logo {
+        position: static;
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header" id="app-header">
+    <img src="2logo.png" alt="Left Logo" class="top-logo left-logo">
+    <h1>
+      <i class="fas fa-boxes"></i> Inventory Management System
+    </h1>
+    <img src="1logo.png" alt="Right Logo" class="top-logo right-logo">
+    <div class="search-container">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="search-input" class="search-input" placeholder="Search inventory...">
+    </div>
+  </div>
+
+  <div class="main-content" id="main-content">
+    <div class="tab-container">
+      <button class="tab-btn active" id="inventory-tab">Inventory</button>
+      <button class="tab-btn" id="purchase-tab">Inwards</button>
+      <button class="tab-btn" id="sales-tab">Outwards</button>
+      <button class="tab-btn" id="issue-slip-tab">Material Issue Slip</button>
+    </div>
+
+    <div id="inventory-section">
+      <div class="form-container">
+        <h2 class="form-title" id="form-title"><i class="fas fa-plus-circle"></i> Add Purchase or Sale</h2>
+        <form id="inventory-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="transaction-type">Transaction Type</label>
+              <select id="transaction-type" required>
+                <option value="purchase">Purchase</option>
+                <option value="sale">Sale</option>
+                <option value="issue">Material Issue</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="part-code">Part Code</label>
+              <input type="text" id="part-code" placeholder="Enter part code" required>
+            </div>
+            <div class="form-group">
+              <label for="description">Description</label>
+              <input type="text" id="description-input" placeholder="Enter description" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="make">Make</label>
+              <input type="text" id="make" placeholder="Enter make" required>
+            </div>
+            <div class="form-group">
+              <label for="hsn">HSN Code</label>
+              <input type="text" id="hsn" placeholder="Enter HSN code" required>
+            </div>
+            <div class="form-group">
+              <label for="category">Category</label>
+              <select id="category" required>
+                <option value="Mechanical">Mechanical</option>
+                <option value="Electrical">Electrical</option>
+                <option value="Chemical">Chemical</option>
+                <option value="Miscellaneous">Miscellaneous</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="uom">Unit of Measurement</label>
+              <select id="uom" required>
+                <option value="Pieces">Pieces</option>
+                <option value="Kg">Kg</option>
+                <option value="Liters">Liters</option>
+                <option value="Meters">Meters</option>
+                <option value="Box">Box</option>
+                <option value="Set">Set</option>
+                <option value="Pair">Pair</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="date">Date</label>
+              <input type="date" id="date" required>
+            </div>
+            <div class="form-group">
+              <label for="type">Item Type</label>
+              <select id="type" required>
+                <option value="Raw Material">Raw Material</option>
+                <option value="Finished Goods">Finished Goods</option>
+                <option value="Semi-Finished">Semi-Finished</option>
+                <option value="Consumables">Consumables</option>
+                <option value="Tools">Tools</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row purchase-field">
+            <div class="form-group">
+              <label for="purchase-amount">Purchase Amount</label>
+              <input type="number" id="purchase-amount" placeholder="Enter amount" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+              <label for="purchase-qty">Purchase Quantity</label>
+              <input type="number" id="purchase-qty" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+              <label for="purchase-from">Purchase From</label>
+              <input type="text" id="purchase-from" placeholder="Enter supplier name">
+            </div>
+          </div>
+
+          <div class="form-row sale-field" style="display: none;">
+            <div class="form-group">
+              <label for="sold-qty">Sold Quantity</label>
+              <input type="number" id="sold-qty" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+              <label for="sold-price">Sold Price</label>
+              <input type="number" id="sold-price" placeholder="Enter price" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+              <label for="sold-to">Sold To</label>
+              <input type="text" id="sold-to" placeholder="Enter customer name">
+            </div>
+          </div>
+
+          <div class="form-row issue-field" style="display: none;">
+            <div class="form-group">
+              <label for="issued-qty">Issued Quantity</label>
+              <input type="number" id="issued-qty" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+              <label for="employee-name">Employee Name</label>
+              <input type="text" id="employee-name" placeholder="Enter employee name">
+            </div>
+            <div class="form-group">
+              <label for="employee-phone">Employee Phone Number</label>
+              <input type="tel" id="employee-phone" placeholder="Enter employee phone">
+            </div>
+          </div>
+          <div class="form-row issue-field" style="display: none;">
+            <div class="form-group">
+              <label for="employee-position">Employee Position</label>
+              <input type="text" id="employee-position" placeholder="Enter employee position">
+            </div>
+            <div class="form-group">
+              <label for="employee-code">Employee Code</label>
+              <input type="text" id="employee-code" placeholder="Enter employee code">
+            </div>
+            <div class="form-group">
+              <label for="issue-remarks">Remarks (Optional)</label>
+              <textarea id="issue-remarks" placeholder="Any additional remarks"></textarea>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="qr">QR Code</label>
+              <div id="qr" style="margin-top: 10px;">
+                <img id="qrImage" src="https://api.qrserver.com/v1/create-qr-code/?data=Default&size=100x100" alt="QR Code" title="QR Code" />
+              </div>
+              <button type="button" class="action-btn" id="download-json-btn" style="display: none; margin-top: 10px; background-color: #2196F3; color: white;">
+                <i class="fas fa-download"></i> Download QR JSON
+              </button>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="cancel-btn" id="cancel-btn" style="display: none;">
+              <i class="fas fa-times"></i> Cancel
+            </button>
+            <button type="submit" class="submit-btn" id="submit-btn">
+              <i class="fas fa-plus"></i> Add Purchase
+            </button>
+            <button type="button" class="dispatch-btn" id="dispatch-btn" style="display: none;">
+              <i class="fas fa-truck"></i> Record Sale
+            </button>
+            <button type="button" class="issue-btn" id="issue-btn" style="display: none;">
+              <i class="fas fa-hand-holding"></i> Record Issue
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <table id="inventory-table">
+        <thead>
+          <tr>
+            <th>Part Code</th>
+            <th>Description</th>
+            <th>Make</th>
+            <th>HSN</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>UOM</th>
+            <th>Purchase Qty</th>
+            <th>Sold Qty</th>
+            <th>Issued Qty</th>
+            <th>Available Qty</th>
+            <th>Approval</th>
+            <th>QR Code</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-body">
+          <tr><td colspan="14" class="loading-message">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="purchase-section" style="display: none;">
+      <table id="purchase-table">
+        <thead>
+          <tr>
+            <th>Part Code</th>
+            <th>Description</th>
+            <th>Make</th>
+            <th>HSN</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>UOM</th>
+            <th>Purchase Amount</th>
+            <th>Purchase Qty</th>
+            <th>Purchase From</th>
+            <th>Date</th>
+            <th>Approval</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="purchase-body">
+          <tr><td colspan="13" class="loading-message">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="sales-section" style="display: none;">
+      <table id="sales-table">
+        <thead>
+          <tr>
+            <th>Part Code</th>
+            <th>Description</th>
+            <th>Make</th>
+            <th>HSN</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>UOM</th>
+            <th>Sold Qty</th>
+            <th>Sold Price</th>
+            <th>Sold To</th>
+            <th>Date</th>
+            <th>Approval</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="sales-body">
+          <tr><td colspan="12" class="loading-message">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="issue-slip-section" style="display: none;">
+      <table id="issue-slip-table">
+        <thead>
+          <tr>
+            <th>Part Code</th>
+            <th>Description</th>
+            <th>Issued Qty</th>
+            <th>Employee Name</th>
+            <th>Employee Phone</th>
+            <th>Employee Position</th>
+            <th>Employee Code</th>
+            <th>Date</th>
+            <th>Remarks</th>
+            <th>Approval</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="issue-slip-body">
+          <tr><td colspan="11" class="loading-message">Loading material issues...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="details-panel" id="details-panel">
+      <h2 class="details-title"><i class="fas fa-info-circle"></i> Item Details</h2>
+      <button class="action-btn back-btn" id="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+      <div class="details-content" id="details-content"></div>
+    </div>
+  </div>
+  <div class="chatbot-container">
+    <button class="chatbot-toggle" id="chatbot-toggle" title="Open Chatbot">
+      <i class="fas fa-comment-dots"></i>
+    </button>
+    <div class="chatbot-window" id="chatbot-window">
+      <div class="chatbot-header">
+        <span id="chatbot-title">Support Chatbot</span>
+        <button class="chatbot-mode-toggle" id="chatbot-mode-toggle">Switch to Local Knowledge</button>
+      </div>
+      <div class="chatbot-messages" id="chatbot-messages">
+        <div class="chatbot-message bot">Hello! How can I assist you with inventory management today?</div>
+      </div>
+      <div class="chatbot-input-container">
+        <input type="text" class="chatbot-input" id="chatbot-input" placeholder="Type your message...">
+        <button class="chatbot-send" id="chatbot-send"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Firebase configuration and initialization
+    const firebaseConfig = {
+      apiKey: "AIzaSyAs8o4QO1YB8zaHq--4rMaYeCHAIOAfAEk",
+      authDomain: "inventory-23e2b.firebaseapp.com",
+      projectId: "inventory-23e2b",
+      storageBucket: "inventory-23e2b.firebaseapp.com",
+      messagingSenderId: "310713354936",
+      appId: "1:310713354936:web:35cdf2af47e02b0ca7024d",
+      measurementId: "G-GGD694N4HL"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Helper function to display '--' for null/undefined/empty string values
+    function displayValue(value) {
+      return (value === null || value === undefined || value === '') ? '--' : value;
+    }
+
+    // Helper function to generate document ID
+    function generateDocId(partCode, make, hsn) {
+      return `${partCode}_${make}_${hsn}`;
+    }
+
+    // Applies a CSS class based on the approval status
+    function getApprovalStatusClass(status) {
+      if (status === 'Approved') return 'status-approved';
+      if (status === 'Rejected') return 'status-rejected';
+      return 'status-pending';
+    }
+
+    // Generates the data string for the QR code from an item object
+    function generateQRData(item) {
+      return JSON.stringify({
+        transactionType: displayValue(document.getElementById('transaction-type').value),
+        partCode: displayValue(item.partCode),
+        description: displayValue(item.description),
+        make: displayValue(item.make),
+        hsn: displayValue(item.hsn),
+        category: displayValue(item.category),
+        type: displayValue(item.type),
+        uom: displayValue(item.uom),
+        purchaseAmount: displayValue(item.purchaseAmount),
+        purchaseQty: displayValue(item.purchaseQty),
+        purchaseFrom: displayValue(item.purchaseFrom),
+        soldQty: displayValue(item.soldQty),
+        soldPrice: displayValue(item.soldPrice),
+        soldTo: displayValue(item.soldTo),
+        issuedQty: displayValue(item.issuedQty),
+        employeeName: displayValue(item.employeeName),
+        employeePhone: displayValue(item.employeePhone),
+        employeePosition: displayValue(item.employeePosition),
+        employeeCode: displayValue(item.employeeCode),
+        issueRemarks: displayValue(item.issueRemarks),
+        date: displayValue(item.date),
+        approvalStatus: displayValue(item.approvalStatus || 'Pending')
+      });
+    }
+
+    // Generates the QR code image URL
+    function generateQRCode(data) {
+      return `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data)}&size=100x100`;
+    }
+
+    // Get references to DOM elements
+    const form = document.getElementById('inventory-form');
+    const tableBody = document.getElementById('inventory-body');
+    const purchaseBody = document.getElementById('purchase-body');
+    const salesBody = document.getElementById('sales-body');
+    const issueSlipBody = document.getElementById('issue-slip-body');
+    const searchInput = document.getElementById('search-input');
+    const formTitle = document.getElementById('form-title');
+    const submitBtn = document.getElementById('submit-btn');
+    const dispatchBtn = document.getElementById('dispatch-btn');
+    const issueBtn = document.getElementById('issue-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const detailsPanel = document.getElementById('details-panel');
+    const detailsContent = document.getElementById('details-content');
+    const inventorySection = document.getElementById('inventory-section');
+    const purchaseSection = document.getElementById('purchase-section');
+    const salesSection = document.getElementById('sales-section');
+    const issueSlipSection = document.getElementById('issue-slip-section');
+    const inventoryTab = document.getElementById('inventory-tab');
+    const purchaseTab = document.getElementById('purchase-tab');
+    const salesTab = document.getElementById('sales-tab');
+    const issueSlipTab = document.getElementById('issue-slip-tab');
+    const transactionType = document.getElementById('transaction-type');
+    const purchaseFields = document.querySelectorAll('.purchase-field');
+    const saleFields = document.querySelectorAll('.sale-field');
+    const issueFields = document.querySelectorAll('.issue-field');
+    const qrImage = document.getElementById('qrImage');
+    const downloadJsonBtn = document.getElementById('download-json-btn');
+    const appHeader = document.getElementById('app-header');
+    const mainContent = document.getElementById('main-content');
+
+    // Variables for managing subscriptions and current item being edited
+    let currentItemId = null;
+    let unsubscribeItems = null;
+    let unsubscribePurchases = null;
+    let unsubscribeSales = null;
+    let unsubscribeMaterialIssues = null;
+
+    // Chatbot specific elements and state
+    const chatbotToggle = document.getElementById('chatbot-toggle');
+    const chatbotWindow = document.getElementById('chatbot-window');
+    const chatbotMessages = document.getElementById('chatbot-messages');
+    const chatbotInput = document.getElementById('chatbot-input');
+    const chatbotSend = document.getElementById('chatbot-send');
+    const chatbotModeToggle = document.getElementById('chatbot-mode-toggle');
+    const chatbotTitle = document.getElementById('chatbot-title');
+    let isSupportMode = true;
+
+    // Set default date for new entries to today
+    document.getElementById('date').valueAsDate = new Date();
+
+    // Dynamically adjusts the margin-top of the main content area
+    function adjustMainContentPadding() {
+      if (appHeader && mainContent) {
+        mainContent.style.marginTop = appHeader.offsetHeight + 'px';
+      }
+    }
+
+    // Toggles the visibility of form fields based on the selected transaction type
+    function toggleFormFields() {
+      const type = transactionType.value;
+      formTitle.innerHTML = `<i class="fas fa-plus-circle"></i> Add ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+
+      submitBtn.style.display = 'none';
+      dispatchBtn.style.display = 'none';
+      issueBtn.style.display = 'none';
+
+      if (type === 'purchase') {
+        submitBtn.innerHTML = `<i class="fas fa-plus"></i> Add Purchase`;
+        submitBtn.style.display = 'flex';
+      } else if (type === 'sale') {
+        dispatchBtn.innerHTML = `<i class="fas fa-truck"></i> Record Sale`;
+        dispatchBtn.style.display = 'flex';
+      } else if (type === 'issue') {
+        issueBtn.innerHTML = `<i class="fas fa-hand-holding"></i> Record Issue`;
+        issueBtn.style.display = 'flex';
+      }
+
+      purchaseFields.forEach(field => {
+        field.style.display = type === 'purchase' ? 'flex' : 'none';
+        Array.from(field.querySelectorAll('input')).forEach(input => input.required = type === 'purchase');
+      });
+
+      saleFields.forEach(field => {
+        field.style.display = type === 'sale' ? 'flex' : 'none';
+        Array.from(field.querySelectorAll('input')).forEach(input => input.required = type === 'sale');
+      });
+
+      issueFields.forEach(field => {
+        field.style.display = type === 'issue' ? 'flex' : 'none';
+        Array.from(field.querySelectorAll('input, textarea')).forEach(input => {
+          if (input.id !== 'issue-remarks') {
+            input.required = type === 'issue';
+          }
+        });
+      });
+
+      updateQRCodePreview();
+    }
+
+    // Updates the QR code image based on the current values in the form fields
+    function updateQRCodePreview() {
+      const item = {
+        transactionType: document.getElementById('transaction-type').value.trim(),
+        partCode: document.getElementById('part-code').value.trim(),
+        description: document.getElementById('description-input').value.trim(),
+        make: document.getElementById('make').value.trim(),
+        hsn: document.getElementById('hsn').value.trim(),
+        category: document.getElementById('category').value,
+        type: document.getElementById('type').value,
+        uom: document.getElementById('uom').value,
+        date: document.getElementById('date').value,
+        purchaseAmount: parseFloat(document.getElementById('purchase-amount').value) || 0,
+        purchaseQty: parseInt(document.getElementById('purchase-qty').value) || 0,
+        purchaseFrom: document.getElementById('purchase-from').value.trim(),
+        soldQty: parseInt(document.getElementById('sold-qty').value) || 0,
+        soldPrice: parseFloat(document.getElementById('sold-price').value) || 0,
+        soldTo: document.getElementById('sold-to').value.trim(),
+        issuedQty: parseInt(document.getElementById('issued-qty').value) || 0,
+        employeeName: document.getElementById('employee-name').value.trim(),
+        employeePhone: document.getElementById('employee-phone').value.trim(),
+        employeePosition: document.getElementById('employee-position').value.trim(),
+        employeeCode: document.getElementById('employee-code').value.trim(),
+        issueRemarks: document.getElementById('issue-remarks').value.trim(),
+        approvalStatus: 'Pending'
+      };
+      qrImage.src = generateQRCode(generateQRData(item));
+    }
+
+    // Event listener for transaction type change
+    transactionType.addEventListener('change', toggleFormFields);
+
+    // Add event listeners to update QR code preview
+    ['part-code', 'description-input', 'make', 'hsn', 'category', 'uom', 'date', 'type',
+     'purchase-amount', 'purchase-qty', 'purchase-from',
+     'sold-qty', 'sold-price', 'sold-to',
+     'issued-qty', 'employee-name', 'employee-phone', 'employee-position', 'employee-code', 'issue-remarks'
+    ].forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener('input', updateQRCodePreview);
+      }
+    });
+
+    // Initial form setup
+    toggleFormFields();
+
+    // Downloads a PDF purchase bill
+    async function downloadPurchaseBill(purchaseId) {
+      try {
+        const docRef = db.collection('purchases').doc(purchaseId);
+        const doc = await docRef.get();
+        if (!doc.exists) {
+          appendMessage('Purchase record not found!', 'bot');
+          return;
+        }
+        const purchase = { id: doc.id, ...doc.data() };
+        generatePurchaseBillPDF(purchase);
+      } catch (error) {
+        console.error('Error downloading purchase bill:', error);
+        appendMessage('Error generating purchase bill', 'bot');
+      }
+    }
+
+    // Event listener for back button
+    document.getElementById('back-btn').addEventListener('click', () => {
+      detailsPanel.style.display = 'none';
+      const activeTab = document.querySelector('.tab-btn.active');
+      if (activeTab) {
+        const activeSectionId = activeTab.id.replace('-tab', '-section');
+        document.getElementById(activeSectionId).style.display = 'block';
+      }
+    });
+
+    // Downloads a PDF sales bill
+    async function downloadSalesBill(saleId) {
+      try {
+        const docRef = db.collection('sales').doc(saleId);
+        const doc = await docRef.get();
+        if (!doc.exists) {
+          appendMessage('Sales record not found!', 'bot');
+          return;
+        }
+        const sale = { id: doc.id, ...doc.data() };
+        generateSalesBillPDF(sale);
+      } catch (error) {
+        console.error('Error downloading sales bill:', error);
+        appendMessage('Error generating sales bill', 'bot');
+      }
+    }
+
+    // Generates PDF for purchase bill
+    function generatePurchaseBillPDF(purchase) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(20);
+      doc.setTextColor(40, 180, 99);
+      doc.text('TECHNOMENS', 105, 20, { align: 'center' });
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text('PURCHASE BILL', 105, 30, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text(`Bill No: ${displayValue(purchase.id)}`, 15, 45);
+      doc.text(`Date: ${displayValue(purchase.date)}`, 15, 55);
+      doc.text(`Supplier: ${displayValue(purchase.purchaseFrom)}`, 15, 65);
+      doc.autoTable({
+        startY: 80,
+        head: [['Part Code', 'Description', 'Make', 'HSN', 'Type', 'UOM', 'Qty', 'Rate', 'Amount']],
+        body: [
+          [
+            displayValue(purchase.partCode),
+            displayValue(purchase.description),
+            displayValue(purchase.make),
+            displayValue(purchase.hsn),
+            displayValue(purchase.type),
+            displayValue(purchase.uom),
+            displayValue(purchase.purchaseQty),
+            displayValue(purchase.purchaseQty ? (purchase.purchaseAmount / purchase.purchaseQty).toFixed(2) : '0.00'),
+            displayValue(purchase.purchaseAmount.toFixed(2))
+          ]
+        ],
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [40, 180, 99] }
+      });
+      const finalY = doc.lastAutoTable.finalY + 10;
+      doc.text(`Total Amount: ₹${displayValue(purchase.purchaseAmount.toFixed(2))}`, 150, finalY);
+      doc.setFontSize(10);
+      doc.text('Thank you for your business!', 105, finalY + 20, { align: 'center' });
+      doc.text('Technomens - Inventory Management System', 105, finalY + 30, { align: 'center' });
+      doc.save(`Purchase_Bill_${displayValue(purchase.id) || displayValue(purchase.date) || 'bill'}.pdf`);
+    }
+
+    // Generates PDF for sales invoice
+    function generateSalesBillPDF(sale) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(20);
+      doc.setTextColor(40, 180, 99);
+      doc.text('TECHNOMENS', 105, 20, { align: 'center' });
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text('SALES INVOICE', 105, 30, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text(`Invoice No: ${displayValue(sale.id)}`, 15, 45);
+      doc.text(`Date: ${displayValue(sale.date)}`, 15, 55);
+      doc.text(`Customer: ${displayValue(sale.soldTo)}`, 15, 65);
+      doc.autoTable({
+        startY: 80,
+        head: [['Part Code', 'Description', 'Make', 'HSN', 'Type', 'UOM', 'Qty', 'Rate', 'Amount']],
+        body: [
+          [
+            displayValue(sale.partCode),
+            displayValue(sale.description),
+            displayValue(sale.make),
+            displayValue(sale.hsn),
+            displayValue(sale.type),
+            displayValue(sale.uom),
+            displayValue(sale.soldQty),
+            displayValue(sale.soldQty ? (sale.soldPrice / sale.soldQty).toFixed(2) : '0.00'),
+            displayValue(sale.soldPrice.toFixed(2))
+          ]
+        ],
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [40, 180, 99] }
+      });
+      const finalY = doc.lastAutoTable.finalY + 10;
+      doc.text(`Total Amount: ₹${displayValue(sale.soldPrice.toFixed(2))}`, 150, finalY);
+      doc.setFontSize(10);
+      doc.text('Thank you for your purchase!', 105, finalY + 20, { align: 'center' });
+      doc.text('Technomens - Inventory Management System', 105, finalY + 30, { align: 'center' });
+      doc.save(`Sales_Invoice_${displayValue(sale.id) || displayValue(sale.date) || 'invoice'}.pdf`);
+    }
+
+    // Event listener for downloading QR JSON
+    downloadJsonBtn.addEventListener('click', () => {
+      const item = {
+        transactionType: document.getElementById('transaction-type').value || 'N/A',
+        partCode: document.getElementById('part-code').value.trim() || 'N/A',
+        description: document.getElementById('description-input').value.trim() || 'N/A',
+        make: document.getElementById('make').value.trim() || 'N/A',
+        hsn: document.getElementById('hsn').value.trim() || 'N/A',
+        category: document.getElementById('category').value || 'N/A',
+        type: document.getElementById('type').value || 'N/A',
+        uom: document.getElementById('uom').value || 'N/A',
+        purchaseAmount: parseFloat(document.getElementById('purchase-amount').value) || 0,
+        purchaseQty: parseInt(document.getElementById('purchase-qty').value) || 0,
+        purchaseFrom: document.getElementById('purchase-from').value.trim() || 'N/A',
+        soldQty: parseInt(document.getElementById('sold-qty').value) || 0,
+        soldPrice: parseFloat(document.getElementById('sold-price').value) || 0,
+        soldTo: document.getElementById('sold-to').value.trim() || 'N/A',
+        issuedQty: parseInt(document.getElementById('issued-qty').value) || 0,
+        employeeName: document.getElementById('employee-name').value.trim(),
+        employeePhone: document.getElementById('employee-phone').value.trim(),
+        employeePosition: document.getElementById('employee-position').value.trim(),
+        employeeCode: document.getElementById('employee-code').value.trim(),
+        issueRemarks: document.getElementById('issue-remarks').value.trim(),
+        date: document.getElementById('date').value || 'N/A',
+        approvalStatus: 'Pending'
+      };
+      const json = JSON.stringify(item, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `item_${item.partCode || 'unknown'}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Form submission for adding/updating records
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const type = transactionType.value;
+      const partCode = document.getElementById('part-code').value.trim();
+      const description = document.getElementById('description-input').value.trim();
+      const make = document.getElementById('make').value.trim();
+      const hsn = document.getElementById('hsn').value.trim();
+      const category = document.getElementById('category').value;
+      const itemType = document.getElementById('type').value;
+      const uom = document.getElementById('uom').value;
+      const date = document.getElementById('date').value;
+
+      if (!partCode || !description || !make || !hsn || !category || !itemType || !uom || !date) {
+        appendMessage('Please fill in all required fields correctly.', 'bot');
+        return;
+      }
+
+      const itemId = generateDocId(partCode, make, hsn);
+
+      try {
+        if (currentItemId) {
+          // Update existing record
+          if (type === 'purchase') {
+            const purchaseAmount = parseFloat(document.getElementById('purchase-amount').value) || 0;
+            const purchaseQty = parseInt(document.getElementById('purchase-qty').value) || 0;
+            const purchaseFrom = document.getElementById('purchase-from').value.trim();
+
+            if (purchaseAmount < 0 || purchaseQty < 0 || !purchaseFrom) {
+              appendMessage('Please fill out all purchase fields correctly.', 'bot');
+              return;
+            }
+
+            const purchaseRef = db.collection('purchases').doc(currentItemId);
+            await purchaseRef.update({
+              partCode, description, make, hsn, category, type: itemType, uom,
+              purchaseAmount, purchaseQty, purchaseFrom, date,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              approvalStatus: 'Pending'
+            });
+            appendMessage('Purchase record updated successfully!', 'bot');
+            fetchPurchases();
+          } else if (type === 'sale') {
+            const soldQty = parseInt(document.getElementById('sold-qty').value) || 0;
+            const soldPrice = parseFloat(document.getElementById('sold-price').value) || 0;
+            const soldTo = document.getElementById('sold-to').value.trim();
+
+            if (soldQty <= 0 || soldPrice <= 0 || !soldTo) {
+              appendMessage('Please fill in all sale fields correctly.', 'bot');
+              return;
+            }
+
+            const saleRef = db.collection('sales').doc(currentItemId);
+            await saleRef.update({
+              partCode, description, make, hsn, category, type: itemType, uom,
+              soldQty, soldPrice, soldTo, date,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              approvalStatus: 'Pending'
+            });
+            appendMessage('Sale record updated successfully!', 'bot');
+            fetchSales();
+          } else if (type === 'issue') {
+            const issuedQty = parseInt(document.getElementById('issued-qty').value) || 0;
+            const employeeName = document.getElementById('employee-name').value.trim();
+            const employeePhone = document.getElementById('employee-phone').value.trim();
+            const employeePosition = document.getElementById('employee-position').value.trim();
+            const employeeCode = document.getElementById('employee-code').value.trim();
+            const issueRemarks = document.getElementById('issue-remarks').value.trim();
+
+            if (issuedQty <= 0 || !employeeName || !employeePhone || !employeePosition || !employeeCode) {
+              appendMessage('Please fill in all required material issue fields correctly.', 'bot');
+              return;
+            }
+
+            const issueRef = db.collection('materialIssues').doc(currentItemId);
+            await issueRef.update({
+              partCode, description, make, hsn, category, type: itemType, uom,
+              issuedQty, employeeName, employeePhone, employeePosition, employeeCode, issueRemarks, date,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              approvalStatus: 'Pending'
+            });
+            appendMessage('Material issue record updated successfully!', 'bot');
+            fetchMaterialIssues();
+          }
+          resetForm();
+        } else {
+          // Add new record
+          const existingItem = await getItemFromFirestore(itemId);
+
+          if (type === 'purchase') {
+            const purchaseAmount = parseFloat(document.getElementById('purchase-amount').value) || 0;
+            const purchaseQty = parseInt(document.getElementById('purchase-qty').value) || 0;
+            const purchaseFrom = document.getElementById('purchase-from').value.trim();
+
+            if (purchaseAmount < 0 || purchaseQty < 0 || !purchaseFrom) {
+              appendMessage('Please fill out all purchase fields correctly.', 'bot');
+              return;
+            }
+
+            let newPurchaseQty = purchaseQty;
+            let newAvailableQty = purchaseQty;
+            let existingSoldQty = 0;
+            let existingIssuedQty = 0;
+
+            if (existingItem) {
+              newPurchaseQty = (existingItem.purchaseQty || 0) + purchaseQty;
+              existingSoldQty = existingItem.soldQty || 0;
+              existingIssuedQty = existingItem.issuedQty || 0;
+              newAvailableQty = newPurchaseQty - existingSoldQty - existingIssuedQty;
+            }
+
+            const item = {
+              id: itemId, partCode, description, make, hsn, category, type: itemType, uom,
+              purchaseQty: newPurchaseQty,
+              soldQty: existingSoldQty,
+              issuedQty: existingIssuedQty,
+              availableQty: newAvailableQty,
+              dateAdded: existingItem ? existingItem.dateAdded : date,
+              approvalStatus: 'Pending',
+              timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            const purchaseRecord = {
+              id: itemId, partCode, description, make, hsn, category, type: itemType, uom,
+              purchaseAmount, purchaseQty, purchaseFrom, date,
+              approvalStatus: 'Pending',
+              timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            await db.collection('inventory').doc(itemId).set(item, { merge: true });
+            await db.collection('purchases').doc(itemId).set(purchaseRecord, { merge: true });
+            appendMessage('Purchase added successfully!', 'bot');
+            resetForm();
+          }
+        }
+      } catch (error) {
+        console.error("Error adding/updating document: ", error);
+        appendMessage('Error processing transaction.', 'bot');
+      }
+    });
+
+    // Record Sale button
+    dispatchBtn.addEventListener('click', async () => {
+      const partCode = document.getElementById('part-code').value.trim();
+      const description = document.getElementById('description-input').value.trim();
+      const make = document.getElementById('make').value.trim();
+      const hsn = document.getElementById('hsn').value.trim();
+      const category = document.getElementById('category').value;
+      const itemType = document.getElementById('type').value;
+      const uom = document.getElementById('uom').value;
+      const date = document.getElementById('date').value;
+      const soldQty = parseInt(document.getElementById('sold-qty').value) || 0;
+      const soldPrice = parseFloat(document.getElementById('sold-price').value) || 0;
+      const soldTo = document.getElementById('sold-to').value.trim();
+
+      if (!partCode || !description || !make || !hsn || !category || !itemType || !uom || !date || soldQty <= 0 || soldPrice <= 0 || !soldTo) {
+        appendMessage('Please fill in all sale details correctly.', 'bot');
+        return;
+      }
+
+      const itemId = generateDocId(partCode, make, hsn);
+
+      try {
+        const existingItem = await getItemFromFirestore(itemId);
+
+        if (!existingItem || existingItem.availableQty < soldQty) {
+          appendMessage('Insufficient stock for this sale.', 'bot');
+          return;
+        }
+
+        const newSoldQty = (existingItem.soldQty || 0) + soldQty;
+        const newAvailableQty = existingItem.availableQty - soldQty;
+
+        const item = {
+          id: itemId, partCode, description, make, hsn, category, type: itemType, uom,
+          purchaseQty: existingItem.purchaseQty || 0,
+          soldQty: newSoldQty,
+          issuedQty: existingItem.issuedQty || 0,
+          availableQty: newAvailableQty,
+          dateAdded: existingItem.dateAdded,
+          approvalStatus: existingItem.approvalStatus || 'Pending',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        const salesRecord = {
+          id: itemId, partCode, description, make, hsn, category, type: itemType, uom,
+          soldQty, soldPrice, soldTo, date,
+          approvalStatus: 'Pending',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection('inventory').doc(itemId).set(item, { merge: true });
+        await db.collection('sales').doc(itemId).set(salesRecord, { merge: true });
+        appendMessage('Sale recorded and inventory updated successfully!', 'bot');
+        resetForm();
+      } catch (error) {
+        console.error("Error recording sale: ", error);
+        appendMessage('Error recording sale.', 'bot');
+      }
+    });
+
+    // Record Issue button
+    issueBtn.addEventListener('click', async () => {
+      const partCode = document.getElementById('part-code').value.trim();
+      const description = document.getElementById('description-input').value.trim();
+      const make = document.getElementById('make').value.trim();
+      const hsn = document.getElementById('hsn').value.trim();
+      const category = document.getElementById('category').value;
+      const itemType = document.getElementById('type').value;
+      const uom = document.getElementById('uom').value;
+      const date = document.getElementById('date').value;
+      const issuedQty = parseInt(document.getElementById('issued-qty').value) || 0;
+      const employeeName = document.getElementById('employee-name').value.trim();
+      const employeePhone = document.getElementById('employee-phone').value.trim();
+      const employeePosition = document.getElementById('employee-position').value.trim();
+      const employeeCode = document.getElementById('employee-code').value.trim();
+      const issueRemarks = document.getElementById('issue-remarks').value.trim();
+
+      if (!partCode || !description || !make || !hsn || !category || !itemType || !uom || !date || issuedQty <= 0 || !employeeName || !employeePhone || !employeePosition || !employeeCode) {
+        appendMessage('Please fill in all material issue details correctly.', 'bot');
+        return;
+      }
+
+      const itemId = generateDocId(partCode, make, hsn);
+
+      try {
+        const existingItem = await getItemFromFirestore(itemId);
+
+        if (!existingItem || existingItem.availableQty < issuedQty) {
+          appendMessage('Insufficient stock for this material issue.', 'bot');
+          return;
+        }
+
+        const newIssuedQty = (existingItem.issuedQty || 0) + issuedQty;
+        const newAvailableQty = existingItem.availableQty - issuedQty;
+
+        const item = {
+          id: itemId, partCode, description, make, hsn, category, type: itemType, uom,
+          purchaseQty: existingItem.purchaseQty || 0,
+          soldQty: existingItem.soldQty || 0,
+          issuedQty: newIssuedQty,
+          availableQty: newAvailableQty,
+          dateAdded: existingItem.dateAdded,
+          approvalStatus: existingItem.approvalStatus || 'Pending',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        const materialIssueRecord = {
+          id: itemId, partCode, description, make, hsn, category, type: itemType, uom,
+          issuedQty, employeeName, employeePhone, employeePosition, employeeCode, issueRemarks, date,
+          approvalStatus: 'Pending',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection('inventory').doc(itemId).set(item, { merge: true });
+        await db.collection('materialIssues').doc(itemId).set(materialIssueRecord, { merge: true });
+        appendMessage('Material Issue recorded and inventory updated successfully!', 'bot');
+        resetForm();
+      } catch (error) {
+        console.error("Error recording material issue: ", error);
+        appendMessage('Error recording material issue.', 'bot');
+      }
+    });
+
+    // Fetches an item from Firestore
+    async function getItemFromFirestore(itemId) {
+      const doc = await db.collection('inventory').doc(itemId).get();
+      return doc.exists ? { id: doc.id, ...doc.data() } : null;
+    }
+
+    // Cancel button
+    cancelBtn.addEventListener('click', resetForm);
+
+    // Resets the form
+    function resetForm() {
+      form.reset();
+      currentItemId = null;
+      document.getElementById('date').valueAsDate = new Date();
+      toggleFormFields();
+      updateQRCodePreview();
+      cancelBtn.style.display = 'none';
+    }
+
+    // Appends a message to the chatbot
+    function appendMessage(message, sender) {
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('chatbot-message', sender);
+      msgDiv.textContent = message;
+      chatbotMessages.appendChild(msgDiv);
+      chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+
+    // Tab switching
+    inventoryTab.addEventListener('click', () => showSection('inventory'));
+    purchaseTab.addEventListener('click', () => showSection('purchase'));
+    salesTab.addEventListener('click', () => showSection('sales'));
+    issueSlipTab.addEventListener('click', () => showSection('issue-slip'));
+
+    // Shows a specific section
+    function showSection(section) {
+      inventorySection.style.display = 'none';
+      purchaseSection.style.display = 'none';
+      salesSection.style.display = 'none';
+      issueSlipSection.style.display = 'none';
+
+      inventoryTab.classList.remove('active');
+      purchaseTab.classList.remove('active');
+      salesTab.classList.remove('active');
+      issueSlipTab.classList.remove('active');
+
+      if (section === 'inventory') {
+        inventorySection.style.display = 'block';
+        inventoryTab.classList.add('active');
+        fetchInventory();
+      } else if (section === 'purchase') {
+        purchaseSection.style.display = 'block';
+        purchaseTab.classList.add('active');
+        fetchPurchases();
+      } else if (section === 'sales') {
+        salesSection.style.display = 'block';
+        salesTab.classList.add('active');
+        fetchSales();
+      } else if (section === 'issue-slip') {
+        issueSlipSection.style.display = 'block';
+        issueSlipTab.classList.add('active');
+        fetchMaterialIssues();
+      }
+    }
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => {
+      showSection('inventory');
+      toggleFormFields();
+      adjustMainContentPadding();
+    });
+
+    // Adjust padding on resize
+    window.addEventListener('resize', adjustMainContentPadding);
+
+    // Fetches inventory items
+    async function fetchInventory() {
+      if (unsubscribeItems) unsubscribeItems();
+      tableBody.innerHTML = '<tr><td colspan="14" class="loading-message">Loading inventory...</td></tr>';
+
+      unsubscribeItems = db.collection('inventory')
+        .orderBy('timestamp', 'desc')
+        .onSnapshot(snapshot => {
+          tableBody.innerHTML = '';
+          if (snapshot.empty) {
+            tableBody.innerHTML = '<tr><td colspan="14" class="loading-message">No inventory items found.</td></tr>';
+            return;
+          }
+          snapshot.forEach(doc => {
+            const item = { id: doc.id, ...doc.data() };
+            const row = tableBody.insertRow();
+
+            row.insertCell(0).textContent = displayValue(item.partCode);
+            row.insertCell(1).textContent = displayValue(item.description);
+            row.insertCell(2).textContent = displayValue(item.make);
+            row.insertCell(3).textContent = displayValue(item.hsn);
+            row.insertCell(4).textContent = displayValue(item.category);
+            row.insertCell(5).textContent = displayValue(item.type);
+            row.insertCell(6).textContent = displayValue(item.uom);
+            row.insertCell(7).textContent = displayValue(item.purchaseQty || 0);
+            row.insertCell(8).textContent = displayValue(item.soldQty || 0);
+            row.insertCell(9).textContent = displayValue(item.issuedQty || 0);
+            const availableQtyCell = row.insertCell(10);
+            availableQtyCell.textContent = displayValue(item.availableQty || 0);
+
+            if (item.availableQty < 10) {
+              availableQtyCell.classList.add('status-low');
+            } else if (item.availableQty < 50) {
+              availableQtyCell.classList.add('status-medium');
+            } else {
+              availableQtyCell.classList.add('status-high');
+            }
+
+            const approvalStatusCell = row.insertCell(11);
+            approvalStatusCell.textContent = displayValue(item.approvalStatus || 'Pending');
+            approvalStatusCell.classList.add(getApprovalStatusClass(item.approvalStatus));
+
+            const qrCodeCell = row.insertCell(12);
+            const qrImg = document.createElement('img');
+            qrImg.src = generateQRCode(generateQRData(item));
+            qrImg.alt = 'QR Code';
+            qrImg.classList.add('qr');
+            qrCodeCell.appendChild(qrImg);
+
+            const actionsCell = row.insertCell(13);
+            actionsCell.classList.add('action-btns');
+
+            const viewBtn = document.createElement('button');
+            viewBtn.innerHTML = '<i class="fas fa-eye"></i> View';
+            viewBtn.classList.add('action-btn', 'edit-btn');
+            viewBtn.onclick = () => showItemDetails(item);
+            actionsCell.appendChild(viewBtn);
+
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+            editBtn.classList.add('action-btn', 'edit-btn');
+            editBtn.onclick = () => editItem(item.id);
+            actionsCell.appendChild(editBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+            deleteBtn.classList.add('action-btn', 'delete-btn');
+            deleteBtn.onclick = () => deleteItem(item.id);
+            actionsCell.appendChild(deleteBtn);
+
+
+          });
+        }, error => {
+          console.error("Error fetching inventory: ", error);
+          tableBody.innerHTML = '<tr><td colspan="14" class="loading-message">Error loading inventory.</td></tr>';
+        });
+    }
+
+    // Approves an inventory item
+    async function approveItem(itemId) {
+      try {
+        await db.collection('inventory').doc(itemId).update({ approvalStatus: 'Approved' });
+        appendMessage(`Inventory item ${itemId} approved.`, 'bot');
+      } catch (error) {
+        console.error("Error approving item:", error);
+        appendMessage("Error approving item.", 'bot');
+      }
+    }
+
+    // Rejects an inventory item
+    async function rejectItem(itemId) {
+      try {
+        await db.collection('inventory').doc(itemId).update({ approvalStatus: 'Rejected' });
+        appendMessage(`Inventory item ${itemId} rejected.`, 'bot');
+      } catch (error) {
+        console.error("Error rejecting item:", error);
+        appendMessage("Error rejecting item.", 'bot');
+      }
+    }
+
+    // Fetches purchase records
+    async function fetchPurchases() {
+      if (unsubscribePurchases) unsubscribePurchases();
+      purchaseBody.innerHTML = '<tr><td colspan="13" class="loading-message">Loading purchases...</td></tr>';
+
+      unsubscribePurchases = db.collection('purchases')
+        .orderBy('timestamp', 'desc')
+        .onSnapshot(snapshot => {
+          purchaseBody.innerHTML = '';
+          if (snapshot.empty) {
+            purchaseBody.innerHTML = '<tr><td colspan="13" class="loading-message">No purchase records found.</td></tr>';
+            return;
+          }
+          snapshot.forEach(doc => {
+            const purchase = { id: doc.id, ...doc.data() };
+            const row = purchaseBody.insertRow();
+            row.insertCell(0).textContent = displayValue(purchase.partCode);
+            row.insertCell(1).textContent = displayValue(purchase.description);
+            row.insertCell(2).textContent = displayValue(purchase.make);
+            row.insertCell(3).textContent = displayValue(purchase.hsn);
+            row.insertCell(4).textContent = displayValue(purchase.category);
+            row.insertCell(5).textContent = displayValue(purchase.type);
+            row.insertCell(6).textContent = displayValue(purchase.uom);
+            row.insertCell(7).textContent = displayValue(purchase.purchaseAmount ? purchase.purchaseAmount.toFixed(2) : '0.00');
+            row.insertCell(8).textContent = displayValue(purchase.purchaseQty);
+            row.insertCell(9).textContent = displayValue(purchase.purchaseFrom);
+            row.insertCell(10).textContent = displayValue(purchase.date);
+
+            const approvalStatusCell = row.insertCell(11);
+            approvalStatusCell.textContent = displayValue(purchase.approvalStatus || 'Pending');
+            approvalStatusCell.classList.add(getApprovalStatusClass(purchase.approvalStatus));
+
+            const actionsCell = row.insertCell(12);
+            actionsCell.classList.add('action-btns');
+
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+            editBtn.classList.add('action-btn', 'edit-btn');
+            editBtn.onclick = () => editPurchase(doc.id);
+            actionsCell.appendChild(editBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+            deleteBtn.classList.add('action-btn', 'delete-btn');
+            deleteBtn.onclick = () => deletePurchase(doc.id);
+            actionsCell.appendChild(deleteBtn);
+
+            const downloadBtn = document.createElement('button');
+            downloadBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Bill';
+            downloadBtn.classList.add('action-btn', 'submit-btn');
+            downloadBtn.onclick = () => downloadPurchaseBill(doc.id);
+            actionsCell.appendChild(downloadBtn);
+
+
+          });
+        }, error => {
+          console.error("Error fetching purchases: ", error);
+          purchaseBody.innerHTML = '<tr><td colspan="13" class="loading-message">Error loading purchases.</td></tr>';
+        });
+    }
+
+    // Approves a purchase record
+    async function approvePurchase(purchaseId) {
+      try {
+        await db.collection('purchases').doc(purchaseId).update({ approvalStatus: 'Approved' });
+        appendMessage(`Purchase record ${purchaseId} approved.`, 'bot');
+      } catch (error) {
+        console.error("Error approving purchase:", error);
+        appendMessage("Error approving purchase.", 'bot');
+      }
+    }
+
+    // Rejects a purchase record
+    async function rejectPurchase(purchaseId) {
+      try {
+        await db.collection('purchases').doc(purchaseId).update({ approvalStatus: 'Rejected' });
+        appendMessage(`Purchase record ${purchaseId} rejected.`, 'bot');
+      } catch (error) {
+        console.error("Error rejecting purchase:", error);
+        appendMessage("Error rejecting purchase.", 'bot');
+      }
+    }
+
+    // Fetches sales records
+    async function fetchSales() {
+      if (unsubscribeSales) unsubscribeSales();
+      salesBody.innerHTML = '<tr><td colspan="12" class="loading-message">Loading sales...</td></tr>';
+
+unsubscribeSales = db.collection('sales')
+  .orderBy('timestamp', 'desc')
+  .onSnapshot(snapshot => {
+    salesBody.innerHTML = '';
+    if (snapshot.empty) {
+      salesBody.innerHTML = '<tr><td colspan="12" class="loading-message">No sales records found.</td></tr>';
+      return;
+    }
+    snapshot.forEach(doc => {
+      const sale = { id: doc.id, ...doc.data() };
+      const row = salesBody.insertRow();
+      row.insertCell(0).textContent = displayValue(sale.partCode);
+      row.insertCell(1).textContent = displayValue(sale.description);
+      row.insertCell(2).textContent = displayValue(sale.make);
+      row.insertCell(3).textContent = displayValue(sale.hsn);
+      row.insertCell(4).textContent = displayValue(sale.category);
+      row.insertCell(5).textContent = displayValue(sale.type);
+      row.insertCell(6).textContent = displayValue(sale.uom);
+      row.insertCell(7).textContent = displayValue(sale.soldQty);
+      row.insertCell(8).textContent = displayValue(sale.soldPrice ? sale.soldPrice.toFixed(2) : '0.00');
+      row.insertCell(9).textContent = displayValue(sale.soldTo);
+      row.insertCell(10).textContent = displayValue(sale.date);
+
+      const approvalStatusCell = row.insertCell(11);
+      approvalStatusCell.textContent = displayValue(sale.approvalStatus || 'Pending');
+      approvalStatusCell.classList.add(getApprovalStatusClass(sale.approvalStatus));
+
+      const actionsCell = row.insertCell(12);
+      actionsCell.classList.add('action-btns');
+
+      const editBtn = document.createElement('button');
+      editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+      editBtn.classList.add('action-btn', 'edit-btn');
+      editBtn.onclick = () => editSale(doc.id);
+      actionsCell.appendChild(editBtn);
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+      deleteBtn.classList.add('action-btn', 'delete-btn');
+      deleteBtn.onclick = () => deleteSale(doc.id);
+      actionsCell.appendChild(deleteBtn);
+
+      const downloadBtn = document.createElement('button');
+      downloadBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Invoice';
+      downloadBtn.classList.add('action-btn', 'submit-btn');
+      downloadBtn.onclick = () => downloadSalesBill(doc.id);
+      actionsCell.appendChild(downloadBtn);
+
+
+    });
+  }, error => {
+    console.error("Error fetching sales: ", error);
+    salesBody.innerHTML = '<tr><td colspan="12" class="loading-message">Error loading sales.</td></tr>';
+  });
+}
+
+// Approves a sale record
+async function approveSale(saleId) {
+  try {
+    await db.collection('sales').doc(saleId).update({ approvalStatus: 'Approved' });
+    appendMessage(`Sale record ${saleId} approved.`, 'bot');
+  } catch (error) {
+    console.error("Error approving sale:", error);
+    appendMessage("Error approving sale.", 'bot');
+  }
+}
+
+// Rejects a sale record
+async function rejectSale(saleId) {
+  try {
+    await db.collection('sales').doc(saleId).update({ approvalStatus: 'Rejected' });
+    appendMessage(`Sale record ${saleId} rejected.`, 'bot');
+  } catch (error) {
+    console.error("Error rejecting sale:", error);
+    appendMessage("Error rejecting sale.", 'bot');
+  }
+}
+
+// Fetches material issue records
+async function fetchMaterialIssues() {
+  if (unsubscribeMaterialIssues) unsubscribeMaterialIssues();
+  issueSlipBody.innerHTML = '<tr><td colspan="11" class="loading-message">Loading material issues...</td></tr>';
+
+  unsubscribeMaterialIssues = db.collection('materialIssues')
+    .orderBy('timestamp', 'desc')
+    .onSnapshot(snapshot => {
+      issueSlipBody.innerHTML = '';
+      if (snapshot.empty) {
+        issueSlipBody.innerHTML = '<tr><td colspan="11" class="loading-message">No material issue records found.</td></tr>';
+        return;
+      }
+      snapshot.forEach(doc => {
+        const issue = { id: doc.id, ...doc.data() };
+        const row = issueSlipBody.insertRow();
+        row.insertCell(0).textContent = displayValue(issue.partCode);
+        row.insertCell(1).textContent = displayValue(issue.description);
+        row.insertCell(2).textContent = displayValue(issue.issuedQty);
+        row.insertCell(3).textContent = displayValue(issue.employeeName);
+        row.insertCell(4).textContent = displayValue(issue.employeePhone);
+        row.insertCell(5).textContent = displayValue(issue.employeePosition);
+        row.insertCell(6).textContent = displayValue(issue.employeeCode);
+        row.insertCell(7).textContent = displayValue(issue.date);
+        row.insertCell(8).textContent = displayValue(issue.issueRemarks);
+
+        const approvalStatusCell = row.insertCell(9);
+        approvalStatusCell.textContent = displayValue(issue.approvalStatus || 'Pending');
+        approvalStatusCell.classList.add(getApprovalStatusClass(issue.approvalStatus));
+
+        const actionsCell = row.insertCell(10);
+        actionsCell.classList.add('action-btns');
+
+        const editBtn = document.createElement('button');
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+        editBtn.classList.add('action-btn', 'edit-btn');
+        editBtn.onclick = () => editMaterialIssue(doc.id);
+        actionsCell.appendChild(editBtn);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+        deleteBtn.classList.add('action-btn', 'delete-btn');
+        deleteBtn.onclick = () => deleteMaterialIssue(doc.id);
+        actionsCell.appendChild(deleteBtn);
+
+
+
+        const returnBtn = document.createElement('button');
+        returnBtn.innerHTML = '<i class="fas fa-undo"></i> Return';
+        returnBtn.classList.add('action-btn', 'submit-btn');
+        returnBtn.onclick = () => returnMaterialIssue(doc.id, issue);
+        actionsCell.appendChild(returnBtn);
+      });
+    }, error => {
+      console.error("Error fetching material issues: ", error);
+      issueSlipBody.innerHTML = '<tr><td colspan="11" class="loading-message">Error loading material issues.</td></tr>';
+    });
+}
+
+// Approves a material issue record
+async function approveMaterialIssue(issueId) {
+  try {
+    await db.collection('materialIssues').doc(issueId).update({ approvalStatus: 'Approved' });
+    appendMessage(`Material issue record ${issueId} approved.`, 'bot');
+  } catch (error) {
+    console.error("Error approving material issue:", error);
+    appendMessage("Error approving material issue.", 'bot');
+  }
+}
+
+// Rejects a material issue record
+async function rejectMaterialIssue(issueId) {
+  try {
+    await db.collection('materialIssues').doc(issueId).update({ approvalStatus: 'Rejected' });
+    appendMessage(`Material issue record ${issueId} rejected.`, 'bot');
+  } catch (error) {
+    console.error("Error rejecting material issue:", error);
+    appendMessage("Error rejecting material issue.", 'bot');
+  }
+}
+
+// Returns a material issue
+async function returnMaterialIssue(issueId, issue) {
+  try {
+    const existingItem = await getItemFromFirestore(issueId);
+    if (!existingItem) {
+      appendMessage('Inventory item not found for return.', 'bot');
+      return;
+    }
+
+    const returnedQty = issue.issuedQty || 0;
+    const newIssuedQty = (existingItem.issuedQty || 0) - returnedQty;
+    const newAvailableQty = (existingItem.availableQty || 0) + returnedQty;
+
+    await db.collection('inventory').doc(issueId).update({
+      issuedQty: newIssuedQty,
+      availableQty: newAvailableQty,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await db.collection('materialIssues').doc(issueId).delete();
+    appendMessage(`Material issue ${issueId} returned successfully.`, 'bot');
+  } catch (error) {
+    console.error("Error returning material issue:", error);
+    appendMessage("Error returning material issue.", 'bot');
+  }
+}
+
+// Edits an inventory item
+async function editItem(itemId) {
+  try {
+    const doc = await db.collection('inventory').doc(itemId).get();
+    if (!doc.exists) {
+      appendMessage('Item not found.', 'bot');
+      return;
+    }
+    const item = doc.data();
+    transactionType.value = 'purchase';
+    toggleFormFields();
+    document.getElementById('part-code').value = item.partCode || '';
+    document.getElementById('description-input').value = item.description || '';
+    document.getElementById('make').value = item.make || '';
+    document.getElementById('hsn').value = item.hsn || '';
+    document.getElementById('category').value = item.category || 'Mechanical';
+    document.getElementById('type').value = item.type || 'Raw Material';
+    document.getElementById('uom').value = item.uom || 'Pieces';
+    document.getElementById('date').value = item.dateAdded || '';
+    currentItemId = itemId;
+    cancelBtn.style.display = 'flex';
+    updateQRCodePreview();
+  } catch (error) {
+    console.error("Error editing item: ", error);
+    appendMessage('Error loading item for editing.', 'bot');
+  }
+}
+
+// Edits a purchase record
+async function editPurchase(purchaseId) {
+  try {
+    const doc = await db.collection('purchases').doc(purchaseId).get();
+    if (!doc.exists) {
+      appendMessage('Purchase record not found.', 'bot');
+      return;
+    }
+    const purchase = doc.data();
+    transactionType.value = 'purchase';
+    toggleFormFields();
+    document.getElementById('part-code').value = purchase.partCode || '';
+    document.getElementById('description-input').value = purchase.description || '';
+    document.getElementById('make').value = purchase.make || '';
+    document.getElementById('hsn').value = purchase.hsn || '';
+    document.getElementById('category').value = purchase.category || 'Mechanical';
+    document.getElementById('type').value = purchase.type || 'Raw Material';
+    document.getElementById('uom').value = purchase.uom || 'Pieces';
+    document.getElementById('purchase-amount').value = purchase.purchaseAmount || '';
+    document.getElementById('purchase-qty').value = purchase.purchaseQty || '';
+    document.getElementById('purchase-from').value = purchase.purchaseFrom || '';
+    document.getElementById('date').value = purchase.date || '';
+    currentItemId = purchaseId;
+    cancelBtn.style.display = 'flex';
+    updateQRCodePreview();
+  } catch (error) {
+    console.error("Error editing purchase: ", error);
+    appendMessage('Error loading purchase for editing.', 'bot');
+  }
+}
+
+// Edits a sale record
+async function editSale(saleId) {
+  try {
+    const doc = await db.collection('sales').doc(saleId).get();
+    if (!doc.exists) {
+      appendMessage('Sale record not found.', 'bot');
+      return;
+    }
+    const sale = doc.data();
+    transactionType.value = 'sale';
+    toggleFormFields();
+    document.getElementById('part-code').value = sale.partCode || '';
+    document.getElementById('description-input').value = sale.description || '';
+    document.getElementById('make').value = sale.make || '';
+    document.getElementById('hsn').value = sale.hsn || '';
+    document.getElementById('category').value = sale.category || 'Mechanical';
+    document.getElementById('type').value = sale.type || 'Raw Material';
+    document.getElementById('uom').value = sale.uom || 'Pieces';
+    document.getElementById('sold-qty').value = sale.soldQty || '';
+    document.getElementById('sold-price').value = sale.soldPrice || '';
+    document.getElementById('sold-to').value = sale.soldTo || '';
+    document.getElementById('date').value = sale.date || '';
+    currentItemId = saleId;
+    cancelBtn.style.display = 'flex';
+    updateQRCodePreview();
+  } catch (error) {
+    console.error("Error editing sale: ", error);
+    appendMessage('Error loading sale for editing.', 'bot');
+  }
+}
+
+// Edits a material issue record
+async function editMaterialIssue(issueId) {
+  try {
+    const doc = await db.collection('materialIssues').doc(issueId).get();
+    if (!doc.exists) {
+      appendMessage('Material issue record not found.', 'bot');
+      return;
+    }
+    const issue = doc.data();
+    transactionType.value = 'issue';
+    toggleFormFields();
+    document.getElementById('part-code').value = issue.partCode || '';
+    document.getElementById('description-input').value = issue.description || '';
+    document.getElementById('make').value = issue.make || '';
+    document.getElementById('hsn').value = issue.hsn || '';
+    document.getElementById('category').value = issue.category || 'Mechanical';
+    document.getElementById('type').value = issue.type || 'Raw Material';
+    document.getElementById('uom').value = issue.uom || 'Pieces';
+    document.getElementById('issued-qty').value = issue.issuedQty || '';
+    document.getElementById('employee-name').value = issue.employeeName || '';
+    document.getElementById('employee-phone').value = issue.employeePhone || '';
+    document.getElementById('employee-position').value = issue.employeePosition || '';
+    document.getElementById('employee-code').value = issue.employeeCode || '';
+    document.getElementById('issue-remarks').value = issue.issueRemarks || '';
+    document.getElementById('date').value = issue.date || '';
+    currentItemId = issueId;
+    cancelBtn.style.display = 'flex';
+    updateQRCodePreview();
+  } catch (error) {
+    console.error("Error editing material issue: ", error);
+    appendMessage('Error loading material issue for editing.', 'bot');
+  }
+}
+
+// Deletes an inventory item
+async function deleteItem(itemId) {
+  if (!confirm('Are you sure you want to delete this inventory item?')) return;
+  try {
+    await db.collection('inventory').doc(itemId).delete();
+    appendMessage('Inventory item deleted successfully.', 'bot');
+  } catch (error) {
+    console.error("Error deleting item: ", error);
+    appendMessage('Error deleting inventory item.', 'bot');
+  }
+}
+
+// Deletes a purchase record
+async function deletePurchase(purchaseId) {
+  if (!confirm('Are you sure you want to delete this purchase record?')) return;
+  try {
+    const purchaseDoc = await db.collection('purchases').doc(purchaseId).get();
+    if (!purchaseDoc.exists) {
+      appendMessage('Purchase record not found.', 'bot');
+      return;
+    }
+    const purchase = purchaseDoc.data();
+    const itemId = generateDocId(purchase.partCode, purchase.make, purchase.hsn);
+    const inventoryDoc = await db.collection('inventory').doc(itemId).get();
+    if (inventoryDoc.exists) {
+      const inventory = inventoryDoc.data();
+      const newPurchaseQty = (inventory.purchaseQty || 0) - (purchase.purchaseQty || 0);
+      const newAvailableQty = newPurchaseQty - (inventory.soldQty || 0) - (inventory.issuedQty || 0);
+      await db.collection('inventory').doc(itemId).update({
+        purchaseQty: newPurchaseQty,
+        availableQty: newAvailableQty,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    await db.collection('purchases').doc(purchaseId).delete();
+    appendMessage('Purchase record deleted successfully.', 'bot');
+  } catch (error) {
+    console.error("Error deleting purchase: ", error);
+    appendMessage('Error deleting purchase record.', 'bot');
+  }
+}
+
+// Deletes a sale record
+async function deleteSale(saleId) {
+  if (!confirm('Are you sure you want to delete this sale record?')) return;
+  try {
+    const saleDoc = await db.collection('sales').doc(saleId).get();
+    if (!saleDoc.exists) {
+      appendMessage('Sale record not found.', 'bot');
+      return;
+    }
+    const sale = saleDoc.data();
+    const itemId = generateDocId(sale.partCode, sale.make, sale.hsn);
+    const inventoryDoc = await db.collection('inventory').doc(itemId).get();
+    if (inventoryDoc.exists) {
+      const inventory = inventoryDoc.data();
+      const newSoldQty = (inventory.soldQty || 0) - (sale.soldQty || 0);
+      const newAvailableQty = (inventory.purchaseQty || 0) - newSoldQty - (inventory.issuedQty || 0);
+      await db.collection('inventory').doc(itemId).update({
+        soldQty: newSoldQty,
+        availableQty: newAvailableQty,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    await db.collection('sales').doc(saleId).delete();
+    appendMessage('Sale record deleted successfully.', 'bot');
+  } catch (error) {
+    console.error("Error deleting sale: ", error);
+    appendMessage('Error deleting sale record.', 'bot');
+  }
+}
+
+// Deletes a material issue record
+async function deleteMaterialIssue(issueId) {
+  if (!confirm('Are you sure you want to delete this material issue record?')) return;
+  try {
+    const issueDoc = await db.collection('materialIssues').doc(issueId).get();
+    if (!issueDoc.exists) {
+      appendMessage('Material issue record not found.', 'bot');
+      return;
+    }
+    const issue = issueDoc.data();
+    const itemId = generateDocId(issue.partCode, issue.make, issue.hsn);
+    const inventoryDoc = await db.collection('inventory').doc(itemId).get();
+    if (inventoryDoc.exists) {
+      const inventory = inventoryDoc.data();
+      const newIssuedQty = (inventory.issuedQty || 0) - (issue.issuedQty || 0);
+      const newAvailableQty = (inventory.purchaseQty || 0) - (inventory.soldQty || 0) - newIssuedQty;
+      await db.collection('inventory').doc(itemId).update({
+        issuedQty: newIssuedQty,
+        availableQty: newAvailableQty,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    await db.collection('materialIssues').doc(issueId).delete();
+    appendMessage('Material issue record deleted successfully.', 'bot');
+  } catch (error) {
+    console.error("Error deleting material issue: ", error);
+    appendMessage('Error deleting material issue record.', 'bot');
+  }
+}
+
+// Shows item details
+function showItemDetails(item) {
+  detailsContent.innerHTML = '';
+  inventorySection.style.display = 'none';
+  purchaseSection.style.display = 'none';
+  salesSection.style.display = 'none';
+  issueSlipSection.style.display = 'none';
+  detailsPanel.style.display = 'block';
+
+  const details = [
+    { label: 'Part Code', value: item.partCode },
+    { label: 'Description', value: item.description },
+    { label: 'Make', value: item.make },
+    { label: 'HSN', value: item.hsn },
+    { label: 'Category', value: item.category },
+    { label: 'Type', value: item.type },
+    { label: 'UOM', value: item.uom },
+    { label: 'Purchase Quantity', value: item.purchaseQty || 0 },
+    { label: 'Sold Quantity', value: item.soldQty || 0 },
+    { label: 'Issued Quantity', value: item.issuedQty || 0 },
+    { label: 'Available Quantity', value: item.availableQty || 0 },
+    { label: 'Date Added', value: item.dateAdded },
+    { label: 'Approval Status', value: item.approvalStatus || 'Pending' }
+  ];
+
+  details.forEach(detail => {
+    const div = document.createElement('div');
+    div.classList.add('detail-item');
+    div.innerHTML = `
+      <span class="detail-label">${detail.label}</span>
+      <div class="detail-value">${displayValue(detail.value)}</div>
+    `;
+    detailsContent.appendChild(div);
+  });
+}
+
+// Search functionality
+searchInput.addEventListener('input', function() {
+  const query = searchInput.value.toLowerCase();
+  const activeTab = document.querySelector('.tab-btn.active').id;
+  let rows;
+
+  if (activeTab === 'inventory-tab') {
+    rows = tableBody.querySelectorAll('tr');
+  } else if (activeTab === 'purchase-tab') {
+    rows = purchaseBody.querySelectorAll('tr');
+  } else if (activeTab === 'sales-tab') {
+    rows = salesBody.querySelectorAll('tr');
+  } else if (activeTab === 'issue-slip-tab') {
+    rows = issueSlipBody.querySelectorAll('tr');
+  }
+
+  rows.forEach(row => {
+    if (!row.querySelector('td')) return;
+    const text = Array.from(row.querySelectorAll('td'))
+      .slice(0, -1)
+      .map(cell => cell.textContent.toLowerCase())
+      .join(' ');
+    row.style.display = text.includes(query) ? '' : 'none';
+  });
+});
+
+// Chatbot toggle
+chatbotToggle.addEventListener('click', () => {
+  chatbotWindow.style.display = chatbotWindow.style.display === 'none' ? 'flex' : 'none';
+});
+
+// Chatbot mode toggle
+chatbotModeToggle.addEventListener('click', () => {
+  isSupportMode = !isSupportMode;
+  chatbotModeToggle.textContent = isSupportMode ? 'Switch to Local Knowledge' : 'Switch to Support Mode';
+  chatbotTitle.textContent = isSupportMode ? 'Support Chatbot' : 'Local Knowledge Chatbot';
+  appendMessage(`Switched to ${isSupportMode ? 'Support' : 'Local Knowledge'} mode.`, 'bot');
+});
+
+// Chatbot message sending
+chatbotSend.addEventListener('click', sendChatbotMessage);
+chatbotInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendChatbotMessage();
+});
+
+async function sendChatbotMessage() {
+  const message = chatbotInput.value.trim();
+  if (!message) return;
+
+  appendMessage(message, 'user');
+  chatbotInput.value = '';
+
+  if (isSupportMode) {
+    appendMessage('This is a support query. Please contact our support team at support@technomens.com.', 'bot');
+  } else {
+    if (message.toLowerCase().includes('inventory')) {
+      const snapshot = await db.collection('inventory').get();
+      const count = snapshot.size;
+      appendMessage(`There are currently ${count} items in the inventory.`, 'bot');
+    } else if (message.toLowerCase().includes('purchase bill')) {
+      const match = message.match(/purchase bill (\S+)/i);
+      if (match) {
+        await downloadPurchaseBill(match[1]);
+      } else {
+        appendMessage('Please provide a purchase ID, e.g., "purchase bill ABC123".', 'bot');
+      }
+    } else if (message.toLowerCase().includes('sales invoice')) {
+      const match = message.match(/sales invoice (\S+)/i);
+      if (match) {
+        await downloadSalesBill(match[1]);
+      } else {
+        appendMessage('Please provide a sale ID, e.g., "sales invoice XYZ789".', 'bot');
+      }
+    } else {
+      appendMessage('I can help with inventory counts or generating bills. Try asking about "inventory" or "purchase bill <ID>".', 'bot');
+    }
+  }
+}
+
+// Cleanup on page unload
+window.addEventListener('unload', () => {
+  if (unsubscribeItems) unsubscribeItems();
+  if (unsubscribePurchases) unsubscribePurchases();
+  if (unsubscribeSales) unsubscribeSales();
+  if (unsubscribeMaterialIssues) unsubscribeMaterialIssues();
+});
+</script>
+</body>
+</html>
