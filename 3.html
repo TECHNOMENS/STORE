@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HR Inventory Control - Approvals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  <style>
+    /* Global styles and body background/watermark from 2.html */
+    html, body {
+      height: 100%;
+      min-height: 100vh;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding-top: 0;
+      background-color: #f5f7fa;
+      position: relative;
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "TECHNOMENS";
+      position: fixed;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 100px;
+      color: rgba(41, 61, 64, 0.15);
+      z-index: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      font-weight: bold;
+    }
+
+    /* Header styles from 2.html */
+    .top-logo {
+      height: 60px;
+      position: absolute;
+      top: 10px;
+    }
+
+    .left-logo {
+      left: 20px;
+    }
+
+    .right-logo {
+      right: 20px;
+    }
+
+    .header {
+      background-color: #f5f7fa;
+      padding: 10px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 3;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      flex-wrap: wrap;
+      gap: 15px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin: 0;
+      color: #2c3e50;
+      font-size: 28px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Main content padding adjustment logic */
+    .main-content {
+      margin-top: 0; /* Adjusted by JS */
+      padding: 20px;
+    }
+
+    /* Section container for the table, similar to form-container in 2.html */
+    .section-container {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 30px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-title {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title i {
+      color: #4CAF50;
+    }
+
+    /* Table styles from 2.html */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 15px;
+      border: 1px solid #e0e0e0;
+      text-align: center;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+      position: sticky;
+      top: 0;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    tr:hover {
+      background-color: #f0f0f0;
+    }
+
+    /* Action buttons for Approve/Reject */
+    .action-btns {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .approve-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+    }
+
+    .approve-btn:hover {
+      background-color: #3d8b40;
+      transform: translateY(-2px);
+    }
+
+    .reject-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+    }
+
+    .reject-btn:hover {
+      background-color: #d32f2f;
+      transform: translateY(-2px);
+    }
+
+    /* Status styling for approval status */
+    .status-pending {
+      color: #FF9800;
+      font-weight: bold;
+    }
+
+    .status-approved {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+
+    .status-rejected {
+      color: #f44336;
+      font-weight: bold;
+    }
+
+    .loading-message {
+      text-align: center;
+      padding: 30px;
+      color: #777;
+      font-size: 16px;
+    }
+
+    /* Tab navigation styles */
+    .tab-container {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center; /* Center tabs */
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      background-color: #e0e0e0;
+      color: #333;
+      transition: all 0.3s;
+    }
+
+    .tab-btn.active {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .tab-btn:hover {
+      background-color: #d0d0d0;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .top-logo {
+        position: static;
+        margin: 0 auto;
+      }
+      th, td {
+        padding: 10px 5px;
+        font-size: 13px;
+      }
+      .action-btns {
+        flex-direction: column;
+        gap: 5px;
+      }
+      .tab-container {
+        justify-content: flex-start; /* Align tabs to start on smaller screens */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header" id="app-header">
+    <img src="2logo.png" alt="Left Logo" class="top-logo left-logo">
+    <h1>
+      <i class="fas fa-user-shield"></i> HR Inventory Control - Approvals
+    </h1>
+    <img src="1logo.png" alt="Right Logo" class="top-logo right-logo">
+  </div>
+
+  <div class="main-content" id="main-content">
+    <div class="tab-container">
+      <button class="tab-btn active" id="inventory-tab">Inventory Approvals</button>
+      <button class="tab-btn" id="purchase-tab">Purchase Approvals</button>
+      <button class="tab-btn" id="sales-tab">Sales Approvals</button>
+      <button class="tab-btn" id="issue-slip-tab">Material Issue Approvals</button>
+    </div>
+
+    <div id="inventory-section" class="section-container">
+      <h2 class="section-title"><i class="fas fa-clipboard-list"></i> Pending Inventory for Approvals</h2>
+      <table id="inventory-approval-table">
+        <thead>
+          <tr>
+            <th>Part Code</th>
+            <th>Description</th>
+            <th>Make</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>UOM</th>
+            <th>Purchase Qty</th>
+            <th>Available Qty</th>
+            <th>Approval Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-approval-body">
+          <tr><td colspan="10" class="loading-message">Loading pending inventory approvals...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="purchase-section" class="section-container" style="display: none;">
+      <h2 class="section-title"><i class="fas fa-file-invoice"></i> Pending Purchase for Approvals</h2>
+      <table id="purchase-approval-table">
+        <thead>
+          <tr>
+            <th>Part Code</th>
+            <th>Description</th>
+            <th>Make</th>
+            <th>HSN</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>UOM</th>
+            <th>Purchase Amount</th>
+            <th>Purchase Qty</th>
+            <th>Purchase From</th>
+            <th>Date</th>
+            <th>Approval Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="purchase-approval-body">
+          <tr><td colspan="13" class="loading-message">Loading pending purchase approvals...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="sales-section" class="section-container" style="display: none;">
+      <h2 class="section-title"><i class="fas fa-receipt"></i> Pending Sales for Approvals</h2>
+      <table id="sales-approval-table">
+        <thead>
+          <tr>
+            <th>Part Code</th>
+            <th>Description</th>
+            <th>Make</th>
+            <th>HSN</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>UOM</th>
+            <th>Sold Qty</th>
+            <th>Sold Price</th>
+            <th>Sold To</th>
+            <th>Date</th>
+            <th>Approval Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="sales-approval-body">
+          <tr><td colspan="12" class="loading-message">Loading pending sales approvals...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="issue-slip-section" class="section-container" style="display: none;">
+      <h2 class="section-title"><i class="fas fa-file-alt"></i> Pending Material Issue for Approvals</h2>
+      <table id="issue-slip-approval-table">
+        <thead>
+          <tr>
+            <th>Part Code</th>
+            <th>Description</th>
+            <th>Issued Qty</th>
+            <th>Employee Name</th>
+            <th>Employee Phone</th>
+            <th>Employee Position</th>
+            <th>Employee Code</th>
+            <th>Date</th>
+            <th>Remarks</th>
+            <th>Approval Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="issue-slip-approval-body">
+          <tr><td colspan="11" class="loading-message">Loading pending material issue approvals...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    // Firebase configuration and initialization (from your original 2.html file)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAs8o4QO1YB8zaHq--4rMaYeCHAIOAfAEk",
+      authDomain: "inventory-23e2b.firebaseapp.com",
+      projectId: "inventory-23e2b",
+      storageBucket: "inventory-23e2b.firebaseapp.com",
+      messagingSenderId: "310713354936",
+      appId: "1:310713354936:web:35cdf2af47e02b0ca7024d",
+      measurementId: "G-GGD694N4HL"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Get references to DOM elements
+    const inventoryApprovalBody = document.getElementById('inventory-approval-body');
+    const purchaseApprovalBody = document.getElementById('purchase-approval-body');
+    const salesApprovalBody = document.getElementById('sales-approval-body');
+    const issueSlipApprovalBody = document.getElementById('issue-slip-approval-body');
+
+    const inventorySection = document.getElementById('inventory-section');
+    const purchaseSection = document.getElementById('purchase-section');
+    const salesSection = document.getElementById('sales-section');
+    const issueSlipSection = document.getElementById('issue-slip-section');
+
+    const inventoryTab = document.getElementById('inventory-tab');
+    const purchaseTab = document.getElementById('purchase-tab');
+    const salesTab = document.getElementById('sales-tab');
+    const issueSlipTab = document.getElementById('issue-slip-tab');
+
+    const appHeader = document.getElementById('app-header');
+    const mainContent = document.getElementById('main-content');
+
+    // Variables to hold Firestore real-time listeners
+    let unsubscribeInventory = null;
+    let unsubscribePurchases = null;
+    let unsubscribeSales = null;
+    let unsubscribeMaterialIssues = null;
+
+    // --- Notification Logic ---
+    function requestNotificationPermission() {
+      if (!("Notification" in window)) {
+        console.log("This browser does not support desktop notification");
+      } else if (Notification.permission === "granted") {
+        console.log("Notification permission already granted.");
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(function (permission) {
+          if (permission === "granted") {
+            console.log("Notification permission granted.");
+          } else {
+            console.log("Notification permission denied.");
+          }
+        });
+      }
+    }
+
+    function showNotification(title, body) {
+      if (Notification.permission === "granted") {
+        new Notification(title, { body: body, icon: '2logo.png' }); // You can use your logo as an icon
+      }
+    }
+    // --- End Notification Logic ---
+
+    /**
+     * Helper function to display '--' for null, undefined, or empty string values.
+     * @param {*} value - The value to check.
+     * @returns {string} The original value or '--' if it's null/undefined/empty.
+     */
+    function displayValue(value) {
+      return (value === null || value === undefined || value === '') ? '--' : value;
+    }
+
+    /**
+     * Returns the appropriate CSS class for the approval status.
+     * @param {string} status - The approval status ('Approved', 'Rejected', 'Pending').
+     * @returns {string} The CSS class name.
+     */
+    function getApprovalStatusClass(status) {
+      if (status === 'Approved') return 'status-approved';
+      if (status === 'Rejected') return 'status-rejected';
+      return 'status-pending';
+    }
+
+    /**
+     * Dynamically adjusts the top margin of the main content area
+     * to prevent it from being hidden behind the fixed header.
+     */
+    function adjustMainContentPadding() {
+      if (appHeader && mainContent) {
+        mainContent.style.marginTop = appHeader.offsetHeight + 'px';
+      }
+    }
+
+    /**
+     * Fetches pending inventory approvals and displays them in the table.
+     */
+    async function fetchPendingInventoryApprovals() {
+      if (unsubscribeInventory) unsubscribeInventory();
+      inventoryApprovalBody.innerHTML = '<tr><td colspan="10" class="loading-message">Loading pending inventory approvals...</td></tr>';
+
+      unsubscribeInventory = db.collection('inventory')
+        .where('approvalStatus', '==', 'Pending')
+        .onSnapshot(snapshot => {
+          // Check for new additions
+          snapshot.docChanges().forEach(change => {
+            if (change.type === "added") {
+              const newItem = change.doc.data();
+              showNotification(
+                'New Inventory Approval Request!',
+                `Part Code: ${displayValue(newItem.partCode)} - Description: ${displayValue(newItem.description)}`
+              );
+            }
+          });
+
+          inventoryApprovalBody.innerHTML = '';
+          if (snapshot.empty) {
+            inventoryApprovalBody.innerHTML = '<tr><td colspan="10" class="loading-message">No pending inventory approvals found.</td></tr>';
+            return;
+          }
+
+          const items = [];
+          snapshot.forEach(doc => {
+            items.push({ id: doc.id, ...doc.data() });
+          });
+
+          items.sort((a, b) => {
+            const timestampA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+            const timestampB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+            return timestampB - timestampA;
+          });
+
+          items.forEach(item => {
+            const row = inventoryApprovalBody.insertRow();
+            row.insertCell(0).textContent = displayValue(item.partCode);
+            row.insertCell(1).textContent = displayValue(item.description);
+            row.insertCell(2).textContent = displayValue(item.make);
+            row.insertCell(3).textContent = displayValue(item.category);
+            row.insertCell(4).textContent = displayValue(item.type);
+            row.insertCell(5).textContent = displayValue(item.uom);
+            row.insertCell(6).textContent = displayValue(item.purchaseQty || 0);
+            row.insertCell(7).textContent = displayValue(item.availableQty || 0);
+
+            const approvalStatusCell = row.insertCell(8);
+            approvalStatusCell.textContent = displayValue(item.approvalStatus || 'Pending');
+            approvalStatusCell.classList.add(getApprovalStatusClass(item.approvalStatus));
+
+            const actionsCell = row.insertCell(9);
+            actionsCell.classList.add('action-btns');
+
+            const approveBtn = document.createElement('button');
+            approveBtn.innerHTML = '<i class="fas fa-check-circle"></i> Approve';
+            approveBtn.classList.add('action-btn', 'approve-btn');
+            approveBtn.onclick = () => updateApprovalStatus('inventory', item.id, 'Approved');
+            actionsCell.appendChild(approveBtn);
+
+            const rejectBtn = document.createElement('button');
+            rejectBtn.innerHTML = '<i class="fas fa-times-circle"></i> Reject';
+            rejectBtn.classList.add('action-btn', 'reject-btn');
+            rejectBtn.onclick = () => updateApprovalStatus('inventory', item.id, 'Rejected');
+            actionsCell.appendChild(rejectBtn);
+          });
+        }, error => {
+          console.error("Error fetching pending inventory approvals: ", error);
+          inventoryApprovalBody.innerHTML = '<tr><td colspan="10" class="loading-message">Error loading pending inventory approvals.</td></tr>';
+        });
+    }
+
+    /**
+     * Fetches pending purchase approvals and displays them in the table.
+     */
+    async function fetchPendingPurchasesApprovals() {
+      if (unsubscribePurchases) unsubscribePurchases();
+      purchaseApprovalBody.innerHTML = '<tr><td colspan="13" class="loading-message">Loading pending purchase approvals...</td></tr>';
+
+      unsubscribePurchases = db.collection('purchases')
+        .where('approvalStatus', '==', 'Pending')
+        .onSnapshot(snapshot => {
+          // Check for new additions
+          snapshot.docChanges().forEach(change => {
+            if (change.type === "added") {
+              const newPurchase = change.doc.data();
+              showNotification(
+                'New Purchase Approval Request!',
+                `Part Code: ${displayValue(newPurchase.partCode)} - Purchase Qty: ${displayValue(newPurchase.purchaseQty)}`
+              );
+            }
+          });
+
+          purchaseApprovalBody.innerHTML = '';
+          if (snapshot.empty) {
+            purchaseApprovalBody.innerHTML = '<tr><td colspan="13" class="loading-message">No pending purchase approvals found.</td></tr>';
+            return;
+          }
+
+          const items = [];
+          snapshot.forEach(doc => {
+            items.push({ id: doc.id, ...doc.data() });
+          });
+
+          items.sort((a, b) => {
+            const timestampA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+            const timestampB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+            return timestampB - timestampA;
+          });
+
+          items.forEach(purchase => {
+            const row = purchaseApprovalBody.insertRow();
+            row.insertCell(0).textContent = displayValue(purchase.partCode);
+            row.insertCell(1).textContent = displayValue(purchase.description);
+            row.insertCell(2).textContent = displayValue(purchase.make);
+            row.insertCell(3).textContent = displayValue(purchase.hsn);
+            row.insertCell(4).textContent = displayValue(purchase.category);
+            row.insertCell(5).textContent = displayValue(purchase.type);
+            row.insertCell(6).textContent = displayValue(purchase.uom);
+            row.insertCell(7).textContent = displayValue(purchase.purchaseAmount ? purchase.purchaseAmount.toFixed(2) : '0.00');
+            row.insertCell(8).textContent = displayValue(purchase.purchaseQty);
+            row.insertCell(9).textContent = displayValue(purchase.purchaseFrom);
+            row.insertCell(10).textContent = displayValue(purchase.date);
+
+            const approvalStatusCell = row.insertCell(11);
+            approvalStatusCell.textContent = displayValue(purchase.approvalStatus || 'Pending');
+            approvalStatusCell.classList.add(getApprovalStatusClass(purchase.approvalStatus));
+
+            const actionsCell = row.insertCell(12);
+            actionsCell.classList.add('action-btns');
+
+            const approveBtn = document.createElement('button');
+            approveBtn.innerHTML = '<i class="fas fa-check-circle"></i> Approve';
+            approveBtn.classList.add('action-btn', 'approve-btn');
+            approveBtn.onclick = () => updateApprovalStatus('purchases', purchase.id, 'Approved');
+            actionsCell.appendChild(approveBtn);
+
+            const rejectBtn = document.createElement('button');
+            rejectBtn.innerHTML = '<i class="fas fa-times-circle"></i> Reject';
+            rejectBtn.classList.add('action-btn', 'reject-btn');
+            rejectBtn.onclick = () => updateApprovalStatus('purchases', purchase.id, 'Rejected');
+            actionsCell.appendChild(rejectBtn);
+          });
+        }, error => {
+          console.error("Error fetching pending purchase approvals: ", error);
+          purchaseApprovalBody.innerHTML = '<tr><td colspan="13" class="loading-message">Error loading pending purchase approvals.</td></tr>';
+        });
+    }
+
+    /**
+     * Fetches pending sales approvals and displays them in the table.
+     */
+    async function fetchPendingSalesApprovals() {
+      if (unsubscribeSales) unsubscribeSales();
+      salesApprovalBody.innerHTML = '<tr><td colspan="12" class="loading-message">Loading pending sales approvals...</td></tr>';
+
+      unsubscribeSales = db.collection('sales')
+        .where('approvalStatus', '==', 'Pending')
+        .onSnapshot(snapshot => {
+          // Check for new additions
+          snapshot.docChanges().forEach(change => {
+            if (change.type === "added") {
+              const newSale = change.doc.data();
+              showNotification(
+                'New Sales Approval Request!',
+                `Part Code: ${displayValue(newSale.partCode)} - Sold Qty: ${displayValue(newSale.soldQty)}`
+              );
+            }
+          });
+
+          salesApprovalBody.innerHTML = '';
+          if (snapshot.empty) {
+            salesApprovalBody.innerHTML = '<tr><td colspan="12" class="loading-message">No pending sales approvals found.</td></tr>';
+            return;
+          }
+
+          const items = [];
+          snapshot.forEach(doc => {
+            items.push({ id: doc.id, ...doc.data() });
+          });
+
+          items.sort((a, b) => {
+            const timestampA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+            const timestampB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+            return timestampB - timestampA;
+          });
+
+          items.forEach(sale => {
+            const row = salesApprovalBody.insertRow();
+            row.insertCell(0).textContent = displayValue(sale.partCode);
+            row.insertCell(1).textContent = displayValue(sale.description);
+            row.insertCell(2).textContent = displayValue(sale.make);
+            row.insertCell(3).textContent = displayValue(sale.hsn);
+            row.insertCell(4).textContent = displayValue(sale.category);
+            row.insertCell(5).textContent = displayValue(sale.type);
+            row.insertCell(6).textContent = displayValue(sale.uom);
+            row.insertCell(7).textContent = displayValue(sale.soldQty);
+            row.insertCell(8).textContent = displayValue(sale.soldPrice ? sale.soldPrice.toFixed(2) : '0.00');
+            row.insertCell(9).textContent = displayValue(sale.soldTo);
+            row.insertCell(10).textContent = displayValue(sale.date);
+
+            const approvalStatusCell = row.insertCell(11);
+            approvalStatusCell.textContent = displayValue(sale.approvalStatus || 'Pending');
+            approvalStatusCell.classList.add(getApprovalStatusClass(sale.approvalStatus));
+
+            const actionsCell = row.insertCell(12);
+            actionsCell.classList.add('action-btns');
+
+            const approveBtn = document.createElement('button');
+            approveBtn.innerHTML = '<i class="fas fa-check-circle"></i> Approve';
+            approveBtn.classList.add('action-btn', 'approve-btn');
+            approveBtn.onclick = () => updateApprovalStatus('sales', sale.id, 'Approved');
+            actionsCell.appendChild(approveBtn);
+
+            const rejectBtn = document.createElement('button');
+            rejectBtn.innerHTML = '<i class="fas fa-times-circle"></i> Reject';
+            rejectBtn.classList.add('action-btn', 'reject-btn');
+            rejectBtn.onclick = () => updateApprovalStatus('sales', sale.id, 'Rejected');
+            actionsCell.appendChild(rejectBtn);
+          });
+        }, error => {
+          console.error("Error fetching pending sales approvals: ", error);
+          salesApprovalBody.innerHTML = '<tr><td colspan="12" class="loading-message">Error loading pending sales approvals.</td></tr>';
+        });
+    }
+
+    /**
+     * Fetches pending material issue approvals and displays them in the table.
+     */
+    async function fetchPendingMaterialIssuesApprovals() {
+      if (unsubscribeMaterialIssues) unsubscribeMaterialIssues();
+      issueSlipApprovalBody.innerHTML = '<tr><td colspan="11" class="loading-message">Loading pending material issue approvals...</td></tr>';
+
+      unsubscribeMaterialIssues = db.collection('materialIssues')
+        .where('approvalStatus', '==', 'Pending')
+        .onSnapshot(snapshot => {
+          // Check for new additions
+          snapshot.docChanges().forEach(change => {
+            if (change.type === "added") {
+              const newIssue = change.doc.data();
+              showNotification(
+                'New Material Issue Approval Request!',
+                `Part Code: ${displayValue(newIssue.partCode)} - Issued Qty: ${displayValue(newIssue.issuedQty)} - Employee: ${displayValue(newIssue.employeeName)}`
+              );
+            }
+          });
+
+          issueSlipApprovalBody.innerHTML = '';
+          if (snapshot.empty) {
+            issueSlipApprovalBody.innerHTML = '<tr><td colspan="11" class="loading-message">No pending material issue approvals found.</td></tr>';
+            return;
+          }
+
+          const items = [];
+          snapshot.forEach(doc => {
+            items.push({ id: doc.id, ...doc.data() });
+          });
+
+          items.sort((a, b) => {
+            const timestampA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+            const timestampB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+            return timestampB - timestampA;
+          });
+
+          items.forEach(issue => {
+            const row = issueSlipApprovalBody.insertRow();
+            row.insertCell(0).textContent = displayValue(issue.partCode);
+            row.insertCell(1).textContent = displayValue(issue.description);
+            row.insertCell(2).textContent = displayValue(issue.issuedQty);
+            row.insertCell(3).textContent = displayValue(issue.employeeName);
+            row.insertCell(4).textContent = displayValue(issue.employeePhone);
+            row.insertCell(5).textContent = displayValue(issue.employeePosition);
+            row.insertCell(6).textContent = displayValue(issue.employeeCode);
+            row.insertCell(7).textContent = displayValue(issue.date);
+            row.insertCell(8).textContent = displayValue(issue.issueRemarks);
+
+            const approvalStatusCell = row.insertCell(9);
+            approvalStatusCell.textContent = displayValue(issue.approvalStatus || 'Pending');
+            approvalStatusCell.classList.add(getApprovalStatusClass(issue.approvalStatus));
+
+            const actionsCell = row.insertCell(10);
+            actionsCell.classList.add('action-btns');
+
+            const approveBtn = document.createElement('button');
+            approveBtn.innerHTML = '<i class="fas fa-check-circle"></i> Approve';
+            approveBtn.classList.add('action-btn', 'approve-btn');
+            approveBtn.onclick = () => updateApprovalStatus('materialIssues', issue.id, 'Approved');
+            actionsCell.appendChild(approveBtn);
+
+            const rejectBtn = document.createElement('button');
+            rejectBtn.innerHTML = '<i class="fas fa-times-circle"></i> Reject';
+            rejectBtn.classList.add('action-btn', 'reject-btn');
+            rejectBtn.onclick = () => updateApprovalStatus('materialIssues', issue.id, 'Rejected');
+            actionsCell.appendChild(rejectBtn);
+          });
+        }, error => {
+          console.error("Error fetching pending material issue approvals: ", error);
+          issueSlipApprovalBody.innerHTML = '<tr><td colspan="11" class="loading-message">Error loading pending material issue approvals.</td></tr>';
+        });
+    }
+
+    /**
+     * Updates the 'approvalStatus' field of a specific document in a given Firestore collection.
+     * @param {string} collectionName - The name of the Firestore collection (e.g., 'inventory', 'purchases').
+     * @param {string} docId - The ID of the document to update.
+     * @param {string} status - The new approval status ('Approved' or 'Rejected').
+     */
+    async function updateApprovalStatus(collectionName, docId, status) {
+      try {
+        await db.collection(collectionName).doc(docId).update({ approvalStatus: status });
+        console.log(`${collectionName} item ${docId} ${status}.`);
+      } catch (error) {
+        console.error(`Error ${status.toLowerCase()} ${collectionName} item:`, error);
+      }
+    }
+
+    /**
+     * Shows a specific section (tab content) and fetches its data.
+     * @param {string} sectionId - The ID of the section to show (e.g., 'inventory', 'purchase').
+     */
+    function showSection(sectionId) {
+      // Hide all sections
+      inventorySection.style.display = 'none';
+      purchaseSection.style.display = 'none';
+      salesSection.style.display = 'none';
+      issueSlipSection.style.display = 'none';
+
+      // Deactivate all tabs
+      inventoryTab.classList.remove('active');
+      purchaseTab.classList.remove('active');
+      salesTab.classList.remove('active');
+      issueSlipTab.classList.remove('active');
+
+      // Show the selected section and activate its tab
+      if (sectionId === 'inventory') {
+        inventorySection.style.display = 'block';
+        inventoryTab.classList.add('active');
+        fetchPendingInventoryApprovals();
+      } else if (sectionId === 'purchase') {
+        purchaseSection.style.display = 'block';
+        purchaseTab.classList.add('active');
+        fetchPendingPurchasesApprovals();
+      } else if (sectionId === 'sales') {
+        salesSection.style.display = 'block';
+        salesTab.classList.add('active');
+        fetchPendingSalesApprovals();
+      } else if (sectionId === 'issue-slip') {
+        issueSlipSection.style.display = 'block';
+        issueSlipTab.classList.add('active');
+        fetchPendingMaterialIssuesApprovals();
+      }
+    }
+
+    // Event listeners for tab buttons
+    inventoryTab.addEventListener('click', () => showSection('inventory'));
+    purchaseTab.addEventListener('click', () => showSection('purchase'));
+    salesTab.addEventListener('click', () => showSection('sales'));
+    issueSlipTab.addEventListener('click', () => showSection('issue-slip'));
+
+    // Event listener for when the DOM is fully loaded.
+    document.addEventListener('DOMContentLoaded', () => {
+      adjustMainContentPadding(); // Adjust header padding on load
+      requestNotificationPermission(); // Request permission on load
+      showSection('inventory'); // Initially show the Inventory Approvals section
+    });
+
+    // Event listener for window resize to re-adjust main content padding
+    window.addEventListener('resize', adjustMainContentPadding);
+
+    // Cleanup on page unload: unsubscribe from all Firestore listeners
+    window.addEventListener('unload', () => {
+      if (unsubscribeInventory) unsubscribeInventory();
+      if (unsubscribePurchases) unsubscribePurchases();
+      if (unsubscribeSales) unsubscribeSales();
+      if (unsubscribeMaterialIssues) unsubscribeMaterialIssues();
+    });
+  </script>
+</body>
+</html>

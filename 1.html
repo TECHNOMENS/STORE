@@ -47,6 +47,7 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
       /* Add a cursor to indicate interactivity */
       cursor: pointer;
+      position: relative; /* Added for positioning the logo */
     }
 
     .dashboard-container:active {
@@ -111,6 +112,81 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
+    /* CSS for the logo */
+    .logo {
+      position: absolute;
+      top: 15px; /* Adjust as needed */
+      left: 15px; /* Adjust as needed */
+      width: 150px; /* Increased from 50px to 150px (3 times) */
+      height: auto;
+      z-index: 10; /* Ensure it's above other elements */
+      cursor: pointer; /* Indicate it's clickable */
+    }
+
+    /* Styles for the password popup */
+    .password-popup {
+      display: none; /* Hidden by default */
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      z-index: 100; /* Above all other content */
+      text-align: center;
+    }
+
+    .password-popup h3 {
+      margin-bottom: 20px;
+      color: #fff;
+    }
+
+    .password-popup input[type="password"] {
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      width: 200px;
+      font-size: 16px;
+      background-color: #333;
+      color: #fff;
+    }
+
+    .password-popup button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #28a745;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .password-popup button:hover {
+      background-color: #218838;
+    }
+
+    .password-popup .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .password-message {
+        color: #ffdd57; /* Warning color */
+        margin-top: 10px;
+        font-size: 14px;
+    }
+
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -132,16 +208,41 @@
       .stat-card {
         padding: 15px;
       }
+
+      .logo {
+        width: 100px; /* Adjusted for smaller screens (still larger) */
+        top: 10px;
+        left: 10px;
+      }
+
+      .password-popup {
+        width: 90%;
+        padding: 20px;
+      }
+
+      .password-popup input[type="password"] {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
   <div class="dashboard-container" id="dashboardContainer">
+    <img src="1logo.png" alt="Logo" class="logo" id="logo">
+
     <h2 class="dashboard-title"><i class="fas fa-chart-line"></i> Available Inventory by Category</h2>
     <div class="chart-container">
       <canvas id="inventoryChart"></canvas>
     </div>
     <div class="stats-grid" id="statsGrid"></div>
+  </div>
+
+  <div class="password-popup" id="passwordPopup">
+    <button class="close-btn" id="closePopupBtn">&times;</button>
+    <h3>Enter Password</h3>
+    <input type="password" id="passwordInput" placeholder="Password">
+    <p class="password-message" id="passwordMessage"></p>
+    <button id="submitPasswordBtn">Submit</button>
   </div>
 
   <script>
@@ -358,32 +459,84 @@
     window.onload = function() {
       loadInventoryData();
 
-      const container = document.getElementById('dashboardContainer'); // Get the container by ID
+      const dashboardContainer = document.getElementById('dashboardContainer');
+      const logo = document.getElementById('logo');
+      const passwordPopup = document.getElementById('passwordPopup');
+      const passwordInput = document.getElementById('passwordInput');
+      const submitPasswordBtn = document.getElementById('submitPasswordBtn');
+      const closePopupBtn = document.getElementById('closePopupBtn');
+      const passwordMessage = document.getElementById('passwordMessage');
+
+      const CORRECT_PASSWORD = "HR9015";
+
+      // Periodically update box-shadow for dashboard container
       setInterval(() => {
-        container.style.boxShadow = `0 8px 32px rgba(0, 0, 0, ${0.2 + Math.random() * 0.1})`;
+        dashboardContainer.style.boxShadow = `0 8px 32px rgba(0, 0, 0, ${0.2 + Math.random() * 0.1})`;
       }, 3000);
 
-      // --- Double-tap logic ---
+      // --- Logo click to show password popup ---
+      logo.addEventListener('click', function(event) {
+        event.stopPropagation(); // Prevent the click from bubbling up to dashboardContainer
+        passwordPopup.style.display = 'block';
+        passwordInput.value = ''; // Clear previous input
+        passwordMessage.textContent = ''; // Clear previous message
+        passwordInput.focus(); // Focus on the input field
+      });
+
+      // --- Submit password button click ---
+      submitPasswordBtn.addEventListener('click', function() {
+        if (passwordInput.value === CORRECT_PASSWORD) {
+          window.location.href = '3.html';
+        } else {
+          passwordMessage.textContent = 'Incorrect password. Please try again.';
+          passwordInput.value = ''; // Clear input on incorrect password
+        }
+      });
+
+      // --- Close popup button click ---
+      closePopupBtn.addEventListener('click', function() {
+        passwordPopup.style.display = 'none';
+      });
+
+      // --- Close popup if clicking outside (optional, but good for UX) ---
+      window.addEventListener('click', function(event) {
+        if (event.target === passwordPopup) {
+          passwordPopup.style.display = 'none';
+        }
+      });
+
+      // Allow pressing Enter key to submit password
+      passwordInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+          submitPasswordBtn.click();
+        }
+      });
+
+      // --- Double-tap logic for dashboard container ---
       let lastTap = 0;
       const doubleTapThreshold = 300; // milliseconds
 
-      container.addEventListener('touchend', function(event) {
+      dashboardContainer.addEventListener('touchend', function(event) {
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTap;
 
         if (tapLength < doubleTapThreshold && tapLength > 0) {
           event.preventDefault(); // Prevent default touch behavior (like zooming)
-          window.location.href = '2.html';
+          // Only redirect if password popup is not active
+          if (passwordPopup.style.display !== 'block') {
+            window.location.href = '2.html';
+          }
         }
         lastTap = currentTime;
       });
 
-      // For desktop/mouse double-click support
-      container.addEventListener('dblclick', function() {
-        window.location.href = '2.html';
+      // For desktop/mouse double-click support on dashboard container
+      dashboardContainer.addEventListener('dblclick', function() {
+        // Only redirect if password popup is not active
+        if (passwordPopup.style.display !== 'block') {
+          window.location.href = '2.html';
+        }
       });
-
-      // Removed the automatic 20-second redirect
     };
   </script>
 </body>
