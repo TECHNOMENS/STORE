@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR-Employee Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f0f0; /* Base color for the smoke background */
+            /* Smoke White Background Animation */
+            background-image:
+                radial-gradient(ellipse at 10% 20%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%),
+                radial-gradient(ellipse at 90% 80%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 60%),
+                radial-gradient(ellipse at 30% 60%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%);
+            background-size: 200% 200%, 180% 180%, 220% 220%; /* Larger to appear smoke-like */
+            animation: smokeAnimation 20s infinite alternate linear; /* Apply the animation */
+        }
+
+        @keyframes smokeAnimation {
+            0% {
+                background-position: 0% 0%, 100% 100%, 50% 50%;
+            }
+            50% {
+                background-position: 100% 100%, 0% 0%, 100% 50%;
+            }
+            100% {
+                background-position: 0% 0%, 100% 100%, 50% 50%;
+            }
+        }
+
+        /* Custom styles for better aesthetics if needed, but Tailwind should cover most */
+        .status-assigned {
+            background-color: #fef3c7; /* yellow-100 */
+            color: #b45309; /* yellow-800 */
+        }
+        .status-completed {
+            background-color: #d1fae5; /* green-100 */
+            color: #065f46; /* green-800 */
+        }
+        .status-overdue {
+            background-color: #fee2e2; /* red-100 */
+            color: #dc2626; /* red-600 */
+            font-weight: 600;
+        }
+        .employee-status-open {
+            background-color: #dcfce7; /* green-100 */
+            color: #16a34a; /* green-600 */
+        }
+        .employee-status-busy {
+            background-color: #bfdbfe; /* blue-200 */
+            color: #2563eb; /* blue-600 */
+        }
+        .employee-status-absent {
+            background-color: #fce7f3; /* pink-100 */
+            color: #db2777; /* pink-600 */
+        }
+        .employee-status-half-day { /* New status color */
+            background-color: #ffe4e6; /* light red-pink */
+            color: #ef4444; /* red-500 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 min-h-screen flex items-center justify-center">
+    <div id="app" class="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-6 w-full relative">
+        <img src="1logo.png" alt="Company Logo 1" class="absolute top-4 left-4 w-24 h-24 object-contain" onerror="this.onerror=null;this.src='https://placehold.co/96x96/CCCCCC/000000?text=Logo1';">
+
+        <h1 class="text-4xl font-extrabold text-center text-indigo-700 mb-8 mt-4">HR-Employee Connect</h1>
+
+
+        <div id="content-area">
+            <div class="flex items-center justify-center text-xl font-semibold text-gray-700">Loading application...</div>
+        </div>
+
+        <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+            <div id="modal-content" class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm relative">
+                <button id="modal-close-button" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl font-bold">
+                    &times;
+                </button>
+                <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-4">Message</h3>
+                <p id="modal-message" class="text-gray-700 mb-4"></p>
+                <div id="modal-children"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            onSnapshot,
+            updateDoc,
+            doc,
+            query,
+            where,
+            getDocs,
+            setDoc,
+            getDoc
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Global variables to hold Firebase instances and user data
+        let app;
+        let db;
+        let auth;
+        let currentUser = null;
+        let currentUserRole = null;
+        let currentUserStatus = null;
+        let currentUserName = null; // Added: To store the current user's name
+        let allTasks = [];
+        let allEmployees = []; // To store employee data for HR view
+
+        // Ensure __app_id is available from the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Firebase configuration provided by the user
+        const firebaseConfig = {
+            apiKey: "AIzaSyA91_GgG0Db_wJoVZDbWePNtfAqbhCUUfY",
+            authDomain: "work-cee35.firebaseapp.com",
+            projectId: "work-cee35",
+            storageBucket: "work-cee35.firebasestorage.app",
+            messagingSenderId: "948314111518",
+            appId: "1:948314111518:web:a821ab697f424eefafb80f",
+            measurementId: "G-J6V1KL86BB"
+        };
+
+        // --- Session Timeout Logic ---
+        const INACTIVITY_TIMEOUT = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+        let lastActivityTime = Date.now();
+        let inactivityTimer;
+
+        function resetInactivityTimer() {
+            lastActivityTime = Date.now();
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+            }
+            inactivityTimer = setTimeout(checkInactivity, INACTIVITY_TIMEOUT);
+        }
+
+        function checkInactivity() {
+            if (Date.now() - lastActivityTime >= INACTIVITY_TIMEOUT) {
+                if (currentUser) {
+                    handleLogout();
+                    showModal('Session Expired', 'You have been logged out due to inactivity.');
+                }
+            }
+        }
+
+        // Listen for user activity to reset the timer
+        ['mousemove', 'keydown', 'click', 'scroll'].forEach(event => {
+            document.addEventListener(event, resetInactivityTimer);
+        });
+
+        // Initialize the timer on page load
+        resetInactivityTimer();
+
+        // --- Utility Functions ---
+
+        // Function to show custom modal
+        function showModal(title, message, childrenHtml = '') {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('modal-children').innerHTML = childrenHtml;
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+        }
+
+        // Function to hide custom modal
+        function hideModal() {
+            document.getElementById('modal-backdrop').classList.add('hidden');
+        }
+
+        // Event listener for modal close button
+        document.getElementById('modal-close-button').addEventListener('click', hideModal);
+        document.getElementById('modal-backdrop').addEventListener('click', (event) => {
+            if (event.target === document.getElementById('modal-backdrop')) {
+                hideModal();
+            }
+        });
+
+        // Helper to format date for display
+        function formatDate(isoString) {
+            if (!isoString) return 'N/A';
+            const date = new Date(isoString);
+            return date.toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Helper to get today's date inYYYY-MM-DD format
+        function getTodayDateString() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // --- Authentication Functions ---
+
+        async function handleAuthSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const isLogin = form.dataset.isLogin === 'true';
+            const email = form.elements['auth-email'].value;
+            const password = form.elements['auth-password'].value;
+            const role = isLogin ? null : form.elements['auth-role'].value;
+            const name = isLogin ? null : form.elements['auth-name'].value; // Get name for registration
+
+            try {
+                if (isLogin) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    showModal('Success', 'Logged in successfully!');
+                } else {
+                    if (!name || name.trim() === '') {
+                        showModal('Error', 'Please enter your name.');
+                        return;
+                    }
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, user.uid);
+                    await setDoc(userDocRef, {
+                        email: user.email,
+                        name: name.trim(), // Store the user's name
+                        role: role,
+                        status: 'open', // Default status for new users
+                        registeredAt: new Date().toISOString(),
+                        lastStatusUpdateDate: getTodayDateString(), // Initialize with today's date
+                        absentReasonToHR: ''
+                    });
+                    showModal('Success', 'Account created and logged in successfully!');
+                }
+            } catch (error) {
+                console.error("Authentication error:", error);
+                showModal('Authentication Failed', `Error: ${error.message}`);
+            }
+        }
+
+        async function handleLogout() {
+            if (auth) {
+                try {
+                    await signOut(auth);
+                    showModal('Success', 'Logged out successfully!');
+                } catch (error) {
+                    console.error("Error logging out:", error);
+                    showModal('Logout Failed', `Error: ${error.message}`);
+                }
+            }
+        }
+
+        // --- Render Functions ---
+
+        function renderAuthPage(message = '') {
+            const contentArea = document.getElementById('content-area');
+            contentArea.innerHTML = `
+                <div class="p-4">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-6 text-center" id="auth-heading">Login</h2>
+                    <form id="auth-form" class="bg-white p-6 rounded-xl shadow-md" data-is-login="true">
+                        <div class="mb-4">
+                            <label for="auth-email" class="block text-gray-700 font-medium mb-2">Email:</label>
+                            <input
+                                type="email"
+                                id="auth-email"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="your.email@example.com"
+                                required
+                            />
+                        </div>
+                        <div class="mb-4 hidden" id="auth-name-field"> <label for="auth-name" class="block text-gray-700 font-medium mb-2">Your Name:</label>
+                            <input
+                                type="text"
+                                id="auth-name"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="John Doe"
+                            />
+                        </div>
+                        <div class="mb-6">
+                            <label for="auth-password" class="block text-gray-700 font-medium mb-2">Password:</label>
+                            <input
+                                type="password"
+                                id="auth-password"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="********"
+                                required
+                            />
+                        </div>
+
+                        <div id="auth-role-select" class="mb-6 hidden">
+                            <label for="auth-role" class="block text-gray-700 font-medium mb-2">Register as:</label>
+                            <select
+                                id="auth-role"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                            >
+                                <option value="employee">Employee</option>
+                                <option value="hr">HR</option>
+                            </select>
+                        </div>
+
+                        <button
+                            type="submit"
+                            id="auth-submit-button"
+                            class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-indigo-700 transition duration-300 shadow-md"
+                        >
+                            Login
+                        </button>
+
+                        <p class="mt-6 text-center text-gray-600">
+                            <span id="toggle-auth-text">Don't have an account?</span>
+                            <button
+                                type="button"
+                                id="toggle-auth-button"
+                                class="text-indigo-600 font-semibold hover:text-indigo-800 ml-1"
+                            >
+                                Sign Up
+                            </button>
+                        </p>
+                    </form>
+                </div>
+            `;
+            if (message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-lg relative mb-4';
+                messageDiv.textContent = message;
+                contentArea.prepend(messageDiv);
+            }
+
+            // Add event listeners for the authentication form
+            const authForm = document.getElementById('auth-form');
+            authForm.addEventListener('submit', handleAuthSubmit);
+
+            const toggleAuthButton = document.getElementById('toggle-auth-button');
+            const authHeading = document.getElementById('auth-heading');
+            const authSubmitButton = document.getElementById('auth-submit-button');
+            const toggleAuthText = document.getElementById('toggle-auth-text');
+            const authRoleSelect = document.getElementById('auth-role-select');
+            const authNameField = document.getElementById('auth-name-field'); // Get the name field container
+            const authNameInput = document.getElementById('auth-name'); // Get the name input itself
+
+            toggleAuthButton.addEventListener('click', () => {
+                const isLogin = authForm.dataset.isLogin === 'true';
+                authForm.dataset.isLogin = !isLogin;
+                authHeading.textContent = isLogin ? 'Sign Up' : 'Login';
+                authSubmitButton.textContent = isLogin ? 'Sign Up' : 'Login';
+                toggleAuthText.textContent = isLogin ? 'Already have an account?' : "Don't have an account?";
+                toggleAuthButton.textContent = isLogin ? 'Login' : 'Sign Up';
+                authRoleSelect.classList.toggle('hidden');
+                authNameField.classList.toggle('hidden'); // Show/hide name field
+                if (!isLogin) {
+                    authNameInput.setAttribute('required', 'true'); // Make name required for sign up
+                } else {
+                    authNameInput.removeAttribute('required');
+                }
+            });
+        }
+
+        function renderDashboard() {
+            const contentArea = document.getElementById('content-area');
+            let dashboardHtml = `
+                <div class="flex items-center justify-between mb-6 pb-4 border-b-2 border-indigo-200">
+                    <div class="text-lg font-medium text-gray-700">
+                        Logged in as: <span class="font-semibold text-indigo-600 break-words">${currentUserName} (${currentUser.email})</span>
+                        <span class="ml-2 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">${currentUserRole.toUpperCase()}</span>
+                    </div>
+                    <button
+                        id="logout-button"
+                        class="px-6 py-2 rounded-lg font-semibold bg-red-500 text-white hover:bg-red-600 transition duration-300 shadow-md"
+                    >
+                        Logout
+                    </button>
+                </div>
+                <div id="dashboard-content"></div>
+            `;
+            contentArea.innerHTML = dashboardHtml;
+
+            document.getElementById('logout-button').addEventListener('click', handleLogout);
+
+            if (currentUserRole === 'hr') {
+                renderHRDashboard();
+            } else if (currentUserRole === 'employee') {
+                renderEmployeeDashboard();
+            } else {
+                document.getElementById('dashboard-content').innerHTML = `
+                    <div class="text-center text-gray-600">Your role is not defined. Please contact HR.</div>
+                `;
+            }
+        }
+
+        async function renderHRDashboard() {
+            const dashboardContent = document.getElementById('dashboard-content');
+            dashboardContent.innerHTML = `
+                <div class="p-4">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-6 border-b-2 pb-2">HR Dashboard</h2>
+
+                    <form id="assign-task-form" class="bg-white p-6 rounded-xl shadow-md mb-8">
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">Assign New Task</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label for="employee-select" class="block text-gray-700 font-medium mb-2">Assign to Employee:</label>
+                                <select
+                                    id="employee-select"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                    required
+                                >
+                                    <option value="">Select an Employee</option>
+                                    </select>
+                            </div>
+                            <div>
+                                <label for="due-date" class="block text-gray-700 font-medium mb-2">Due Date:</label>
+                                <input
+                                    type="date"
+                                    id="due-date"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label for="due-time" class="block text-gray-700 font-medium mb-2">Due Time:</label>
+                                <input
+                                    type="time"
+                                    id="due-time"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label for="task-description" class="block text-gray-700 font-medium mb-2">Task Description:</label>
+                            <textarea
+                                id="task-description"
+                                rows="3"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Describe the task here..."
+                                required
+                            ></textarea>
+                        </div>
+                        <button
+                            type="submit"
+                            class="mt-6 w-full bg-indigo-600 text-white py-3 rounded-lg font-bold text-lg hover:bg-indigo-700 transition duration-300 shadow-md"
+                        >
+                            Assign Task
+                        </button>
+                    </form>
+
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Registered Employees Overview</h3>
+                    <div id="employees-overview" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        </div>
+
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Manage Absent Employees</h3>
+                    <div id="absent-employees-management" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <p class="text-gray-600" id="no-absent-employees">No employees currently marked as Absent or Half Day.</p>
+                    </div>
+
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">All Assigned Tasks</h3>
+                    <div id="hr-tasks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                        </div>
+                </div>
+            `;
+
+            // Populate employee select dropdown
+            const employeeSelect = document.getElementById('employee-select');
+            employeeSelect.innerHTML = '<option value="">Select an Employee</option>'; // Reset options
+            allEmployees.filter(emp => emp.role === 'employee').forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.uid;
+                option.textContent = `${emp.name || emp.email} (ID: ${emp.uid.substring(0, 8)}...)`; // Display name or email
+                employeeSelect.appendChild(option);
+            });
+
+            // Add event listener for task assignment
+            document.getElementById('assign-task-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const employeeId = document.getElementById('employee-select').value;
+                const description = document.getElementById('task-description').value;
+                const dueDate = document.getElementById('due-date').value;
+                const dueTime = document.getElementById('due-time').value;
+
+                if (!employeeId || !description || !dueDate || !dueTime) {
+                    showModal('Error', 'Please fill in all task details: Employee, Description, Due Date, and Due Time.');
+                    return;
+                }
+
+                const combinedDueDateTime = new Date(`${dueDate}T${dueTime}:00`).toISOString();
+
+                try {
+                    const tasksCollectionRef = collection(db, `artifacts/${appId}/public/data/tasks`);
+                    await addDoc(tasksCollectionRef, {
+                        employeeId: employeeId,
+                        hrId: currentUser.uid,
+                        description: description.trim(),
+                        dueDate: combinedDueDateTime,
+                        status: 'assigned',
+                        createdAt: new Date().toISOString(),
+                        completionPicUrl: '',
+                        completedAt: null,
+                        overdueReason: ''
+                    });
+                    document.getElementById('employee-select').value = '';
+                    document.getElementById('task-description').value = '';
+                    document.getElementById('due-date').value = '';
+                    document.getElementById('due-time').value = '';
+                    showModal('Success', 'Task assigned successfully!');
+                } catch (error) {
+                    console.error("Error assigning task:", error);
+                    showModal('Failed', `Failed to assign task: ${error.message}`);
+                }
+            });
+
+            updateHRDashboardTasks();
+            updateEmployeesOverview();
+            updateAbsentEmployeesManagement(); // New function call
+        }
+
+        function updateHRDashboardTasks() {
+            const hrTasksList = document.getElementById('hr-tasks-list');
+            if (!hrTasksList) return;
+
+            const hrTasks = allTasks.filter(task => allEmployees.some(emp => emp.uid === task.employeeId));
+
+            if (hrTasks.length === 0) {
+                hrTasksList.innerHTML = '<p class="text-gray-600">No tasks assigned yet.</p>';
+            } else {
+                hrTasksList.innerHTML = hrTasks.map(task => renderTaskCard(task, true)).join('');
+            }
+        }
+
+        function updateEmployeesOverview() {
+            const employeesOverview = document.getElementById('employees-overview');
+            if (!employeesOverview) return;
+
+            const registeredEmployees = allEmployees.filter(emp => emp.role === 'employee');
+
+            if (registeredEmployees.length === 0) {
+                employeesOverview.innerHTML = '<p class="text-gray-600">No employees registered yet.</p>';
+                return;
+            }
+
+            const employeesWithStatus = registeredEmployees.map(employee => {
+                const employeeTasks = allTasks.filter(task => task.employeeId === employee.uid);
+                const hasAssignedTasks = employeeTasks.length > 0;
+                const allCompleted = hasAssignedTasks && employeeTasks.every(task => task.status === 'completed');
+                const pendingTasks = employeeTasks.filter(task => task.status === 'assigned' && !isTaskOverdue(task));
+                const overdueTasks = employeeTasks.filter(task => task.status === 'assigned' && isTaskOverdue(task));
+
+                return {
+                    ...employee,
+                    hasAssignedTasks,
+                    allCompleted,
+                    pendingTasksCount: pendingTasks.length,
+                    overdueTasksCount: overdueTasks.length,
+                    overallStatusText: employee.status ? employee.status.charAt(0).toUpperCase() + employee.status.slice(1) : 'Unknown',
+                    overallStatusClass: `employee-status-${employee.status || 'absent'}`
+                };
+            });
+
+            employeesOverview.innerHTML = employeesWithStatus.map(employee => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                    <p class="text-lg font-semibold text-gray-900">${employee.name || employee.email}</p> <p class="text-sm text-gray-600">ID: ${employee.uid.substring(0, 8)}...</p>
+                    <p class="text-gray-700 mt-2">
+                        <span class="font-medium">Current Status:</span> <span class="px-2 py-1 rounded-full text-xs font-semibold ${employee.overallStatusClass}">${employee.overallStatusText}</span>
+                    </p>
+                    <p class="text-gray-700 mt-2">
+                        <span class="font-medium">Task Status:</span> ${employee.hasAssignedTasks ? (employee.allCompleted ? 'All Tasks Completed' : `${employee.pendingTasksCount} Pending, ${employee.overdueTasksCount} Overdue`) : 'No Tasks Assigned'}
+                    </p>
+                    ${employee.overdueTasksCount > 0 ? `<p class="text-red-500 text-sm">(${employee.overdueTasksCount} tasks overdue)</p>` : ''}
+                </div>
+            `).join('');
+        }
+
+        async function updateAbsentEmployeesManagement() {
+            const absentEmployeesManagement = document.getElementById('absent-employees-management');
+            if (!absentEmployeesManagement) return;
+
+            const absentOrHalfDayEmployees = allEmployees.filter(emp => emp.role === 'employee' && (emp.status === 'absent' || emp.status === 'half-day'));
+
+            if (absentOrHalfDayEmployees.length === 0) {
+                absentEmployeesManagement.innerHTML = '<p class="text-gray-600" id="no-absent-employees">No employees currently marked as Absent or Half Day.</p>';
+            } else {
+                absentEmployeesManagement.innerHTML = absentOrHalfDayEmployees.map(employee => `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <p class="text-lg font-semibold text-gray-900">${employee.name || employee.email}</p> <p class="text-sm text-gray-600">ID: ${employee.uid.substring(0, 8)}...</p>
+                        <p class="text-gray-700 mt-2">
+                            <span class="font-medium">Current Status:</span> <span class="px-2 py-1 rounded-full text-xs font-semibold ${`employee-status-${employee.status || 'absent'}`}">${employee.status ? employee.status.charAt(0).toUpperCase() + employee.status.slice(1) : 'Unknown'}</span>
+                        </p>
+                        ${employee.absentReasonToHR ? `
+                            <p class="text-gray-700 text-sm mt-2"><span class="font-semibold">Reason to HR:</span> ${employee.absentReasonToHR}</p>
+                        ` : ''}
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <button data-uid="${employee.uid}" data-new-status="open" class="update-employee-status-btn px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 text-sm font-medium">Mark Present</button>
+                            <button data-uid="${employee.uid}" data-new-status="half-day" class="update-employee-status-btn px-4 py-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 text-sm font-medium">Mark Half Day</button>
+                            <button data-uid="${employee.uid}" data-new-status="absent" class="update-employee-status-btn px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 text-sm font-medium">Keep Absent</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                absentEmployeesManagement.querySelectorAll('.update-employee-status-btn').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const uid = e.target.dataset.uid;
+                        // FIX: Corrected access to dataset attribute
+                        const newStatus = e.target.dataset.newStatus;
+                        try {
+                            const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, uid);
+                            await updateDoc(userDocRef, {
+                                status: newStatus,
+                                absentReasonToHR: '' // Clear reason once HR acts
+                            });
+                            showModal('Status Updated', `Employee ${uid.substring(0, 8)}... status updated to ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}.`);
+                        } catch (error) {
+                            console.error("Error updating employee status from HR:", error);
+                            showModal('Update Failed', `Failed to update employee status: ${error.message}`);
+                        }
+                    });
+                });
+            }
+        }
+
+        async function updateEmployeeStatus(newStatus, absentReason = '') {
+            if (!currentUser || !db) return;
+
+            try {
+                const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, currentUser.uid);
+                await updateDoc(userDocRef, {
+                    status: newStatus,
+                    lastStatusUpdateDate: getTodayDateString(), // Update last status date
+                    absentReasonToHR: absentReason // Set reason if provided
+                });
+                showModal('Status Updated', `Your status has been set to "${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}".`);
+            } catch (error) {
+                console.error("Error updating employee status:", error);
+                showModal('Status Update Failed', `Failed to update status: ${error.message}`);
+            }
+        }
+
+        async function renderEmployeeDashboard() {
+            const dashboardContent = document.getElementById('dashboard-content');
+            dashboardContent.innerHTML = `
+                <div class="p-4">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-6 border-b-2 pb-2">Employee Dashboard</h2>
+
+                    <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-4">Set Your Status</h3>
+                        <div class="flex flex-wrap justify-center gap-4">
+                            <button id="status-open-btn" class="px-6 py-3 rounded-lg font-bold text-lg bg-green-500 text-white hover:bg-green-600 transition duration-300 shadow-md">Open</button>
+                            <button id="status-busy-btn" class="px-6 py-3 rounded-lg font-bold text-lg bg-blue-500 text-white hover:bg-blue-600 transition duration-300 shadow-md">Busy</button>
+                        </div>
+                        <p class="text-center text-gray-600 mt-4">Current Status: <span class="font-semibold px-2 py-1 rounded-full text-sm ${currentUserStatus ? `employee-status-${currentUserStatus}` : 'bg-gray-200 text-gray-700'}">${currentUserStatus ? currentUserStatus.charAt(0).toUpperCase() + currentUserStatus.slice(1) : 'Unknown'}</span></p>
+                    </div>
+
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Your Assigned Tasks</h3>
+                    <div id="employee-tasks-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                        </div>
+                </div>
+            `;
+            // Add event listeners for status buttons
+            document.getElementById('status-open-btn').addEventListener('click', () => updateEmployeeStatus('open'));
+            document.getElementById('status-busy-btn').addEventListener('click', () => updateEmployeeStatus('busy'));
+
+            // Check for auto-absent status
+            const todayDateString = getTodayDateString();
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const tenThirtyAMInMinutes = 10 * 60 + 30; // 10:30 AM
+
+            // If user's status is 'absent' when they log in, always prompt for reason
+            if (currentUserStatus === 'absent' && !sessionStorage.getItem(`promptedForReason_${currentUser.uid}_${todayDateString}`)) {
+                showReasonForJoiningModal();
+                sessionStorage.setItem(`promptedForReason_${currentUser.uid}_${todayDateString}`, 'true'); // Store flag in session storage
+            }
+            // Check for auto-absent rule on login IF current status is not 'busy' or 'absent'
+            else if (currentUserRole === 'employee' && currentUser.uid && currentUserStatus !== 'busy' && currentUserStatus !== 'absent') {
+                const employeeDoc = allEmployees.find(emp => emp.uid === currentUser.uid);
+                if (employeeDoc && employeeDoc.lastStatusUpdateDate !== todayDateString) {
+                    // It's a new day, status needs to be handled
+                    if ((currentHour * 60 + currentMinute) >= tenThirtyAMInMinutes) {
+                        // Past 10:30 AM, auto-mark absent
+                        showModal(
+                            'Auto-Marked Absent',
+                            'It is past 10:30 AM and your status for today was not updated. You have been automatically marked as "Absent". Please provide a reason to HR to change your status.',
+                            `
+                                <textarea id="reason-to-hr-input" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 mt-4" placeholder="Reason for absence or delay in updating status..."></textarea>
+                                <button id="submit-reason-to-hr" class="mt-4 w-full bg-red-600 text-white py-2 rounded-lg font-bold hover:bg-red-700">Submit Reason to HR</button>
+                            `
+                        );
+                        document.getElementById('submit-reason-to-hr').addEventListener('click', async () => {
+                            const reason = document.getElementById('reason-to-hr-input').value;
+                            await updateEmployeeStatus('absent', reason);
+                            hideModal();
+                        });
+                    } else {
+                        // Before 10:30 AM on a new day, reset to 'open'
+                        await updateEmployeeStatus('open', ''); // Reset reason if any from previous days
+                    }
+                }
+            }
+
+
+            updateEmployeeDashboardTasks();
+        }
+
+        function showReasonForJoiningModal() {
+            showModal(
+                'Provide Reason to HR',
+                'Your current status is Absent. Please provide a reason for joining back so HR can update your availability.',
+                `
+                    <textarea id="reason-for-joining-input" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 mt-4" placeholder="Reason for joining back..."></textarea>
+                    <button id="submit-reason-for-joining" class="mt-4 w-full bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700">Submit Reason</button>
+                `
+            );
+            document.getElementById('submit-reason-for-joining').addEventListener('click', async () => {
+                const reason = document.getElementById('reason-for-joining-input').value;
+                if (!reason.trim()) {
+                    showModal('Error', 'Please provide a reason to HR.');
+                    return;
+                }
+                // When submitting reason from this modal, the status *remains* 'absent'.
+                // HR will then manually change it.
+                await updateEmployeeStatus('absent', reason);
+                hideModal();
+            });
+        }
+
+
+        function isTaskOverdue(task) {
+            return task.status === 'assigned' && new Date(task.dueDate) < new Date();
+        }
+
+        function updateEmployeeDashboardTasks() {
+            const employeeTasksList = document.getElementById('employee-tasks-list');
+            if (!employeeTasksList) return;
+
+            const employeeTasks = allTasks.filter(task => currentUser && task.employeeId === currentUser.uid);
+
+            if (employeeTasks.length === 0) {
+                employeeTasksList.innerHTML = '<p class="text-gray-600">No tasks assigned to you yet.</p>';
+            } else {
+                employeeTasksList.innerHTML = employeeTasks.map(task => renderTaskCard(task, false)).join('');
+
+                employeeTasks.forEach(task => {
+                    if (task.status === 'assigned') {
+                        const completeButton = document.querySelector(`#task-card-${task.id} .mark-complete-button`);
+                        if (completeButton) {
+                            completeButton.addEventListener('click', () => showCompleteTaskModal(task));
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderTaskCard(task, isHR) {
+            let displayStatus = task.status;
+            let statusClass = `status-${task.status}`;
+            let overdueMessage = '';
+
+            if (isTaskOverdue(task)) {
+                displayStatus = 'Overdue';
+                statusClass = 'status-overdue';
+                overdueMessage = '<p class="text-red-600 text-sm mt-1">This task is overdue!</p>';
+            }
+
+            const formattedDueDate = new Date(task.dueDate).toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const formattedDueTime = new Date(task.dueDate).toLocaleTimeString(undefined, {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Find the HR user's name based on hrId
+            const hrUser = allEmployees.find(emp => emp.uid === task.hrId);
+            const hrDisplayName = hrUser ? (hrUser.name || hrUser.email) : task.hrId; // Fallback to email or ID if not found
+
+            // Find the Employee's name based on employeeId
+            const employeeUser = allEmployees.find(emp => emp.uid === task.employeeId);
+            const employeeDisplayName = employeeUser ? (employeeUser.name || employeeUser.email) : task.employeeId; // Fallback to email or ID if not found
+
+
+            const completedInfo = task.status === 'completed' ? `
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <p class="text-green-600 font-semibold mb-2">Task Completed!</p>
+                    <p class="text-gray-700 text-sm mb-2">
+                        <span class="font-semibold">Completed On:</span> ${task.completedAt ? new Date(task.completedAt).toLocaleString() : 'N/A'}
+                    </p>
+                    ${task.completionPicUrl ? `
+                        <p class="text-gray-700 font-semibold mb-2">Completion Evidence:</p>
+                        ${task.completionPicUrl.startsWith('http') || task.completionPicUrl.startsWith('data:') ? `
+                            <img src="${task.completionPicUrl}" alt="Completion Evidence" class="max-w-full h-auto rounded-lg shadow-sm mt-2" onerror="this.onerror=null;this.src='https://placehold.co/150x100/A0AEC0/000000?text=Image+Error';"/>
+                        ` : `
+                            <p class="text-gray-600 italic">Description: ${task.completionPicUrl}</p>
+                        `}
+                    ` : `
+                        <p class="text-gray-600 italic">No completion evidence provided.</p>
+                    `}
+                    ${task.overdueReason ? `
+                        <p class="text-orange-600 text-sm mt-2"><span class="font-semibold">Reason for Delay:</span> ${task.overdueReason}</p>
+                    ` : ''}
+                </div>
+            ` : '';
+
+            const completeButtonHtml = !isHR && task.status === 'assigned' ? `
+                <button
+                    class="mt-4 w-full bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-600 transition duration-300 mark-complete-button"
+                >
+                    Mark as Complete
+                </button>
+            ` : '';
+
+            return `
+                <div id="task-card-${task.id}" class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                    <div class="flex justify-between items-start mb-4">
+                        <h4 class="text-xl font-bold text-gray-900">${task.description}</h4>
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold ${statusClass}">
+                            ${displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1)}
+                        </span>
+                    </div>
+                    <p class="text-gray-700 mb-2">
+                        <span class="font-semibold">Assigned To:</span> ${employeeDisplayName}
+                    </p>
+                    <p class="text-gray-700 mb-2">
+                        <span class="font-semibold">Assigned By:</span> ${hrDisplayName}
+                    </p>
+                    <p class="text-gray-700 mb-4">
+                        <span class="font-semibold">Due:</span> ${formattedDueDate} at ${formattedDueTime}
+                    </p>
+                    ${overdueMessage}
+                    ${completedInfo}
+                    ${completeButtonHtml}
+                </div>
+            `;
+        }
+
+        function showCompleteTaskModal(task) {
+            const isTaskCurrentlyOverdue = isTaskOverdue(task);
+            const overdueReasonInput = isTaskCurrentlyOverdue ? `
+                <p class="text-orange-600 font-semibold mb-2">This task is overdue. Please provide a reason for the delay:</p>
+                <textarea
+                    id="overdue-reason-input"
+                    rows="2"
+                    class="w-full px-4 py-2 border border-orange-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 mb-4"
+                    placeholder="Reason for delay..."
+                ></textarea>
+            ` : '';
+
+            const childrenHtml = `
+                ${overdueReasonInput}
+                <p class="text-gray-700 mb-4">Provide a URL or description for the completion evidence:</p>
+                <input
+                    type="text"
+                    id="completion-pic-input"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 mb-4"
+                    placeholder="e.g., https://example.com/done.jpg or 'Report attached'"
+                />
+                <button
+                    id="submit-completion-button"
+                    class="w-full bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700 transition duration-300"
+                >
+                    Submit Completion
+                </button>
+            `;
+            showModal('Mark Task as Complete', '', childrenHtml);
+
+            document.getElementById('submit-completion-button').addEventListener('click', async () => {
+                const completionPicUrl = document.getElementById('completion-pic-input').value;
+                const overdueReason = isTaskCurrentlyOverdue ? document.getElementById('overdue-reason-input').value : '';
+
+                try {
+                    const taskDocRef = doc(db, `artifacts/${appId}/public/data/tasks`, task.id);
+                    await updateDoc(taskDocRef, {
+                        status: 'completed',
+                        completionPicUrl: completionPicUrl,
+                        completedAt: new Date().toISOString(),
+                        overdueReason: overdueReason
+                    });
+
+                    // Update employee's status to 'open' after task completion
+                    if (currentUser && currentUserRole === 'employee') {
+                        const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, currentUser.uid);
+                        await updateDoc(userDocRef, {
+                            status: 'open',
+                            lastStatusUpdateDate: getTodayDateString(), // Mark status as updated today
+                            absentReasonToHR: '' // Clear reason to HR if they've completed a task
+                        });
+                    }
+
+                    hideModal();
+                    showModal('Success', 'Task marked as completed!');
+                }
+                catch (error) {
+                    console.error("Error completing task:", error);
+                    hideModal();
+                    showModal('Failed', `Failed to complete task: ${error.message}`);
+                }
+            });
+        }
+
+        // --- Main Application Flow ---
+
+        window.onload = function() {
+            // Initialize Firebase
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            /*
+             * *******************************************************************
+             * IMPORTANT FIX FOR "Missing or insufficient permissions" ERROR:
+             * *******************************************************************
+             *
+             * The errors "Missing or insufficient permissions" indicate that your
+             * Firebase Firestore Security Rules are preventing your application
+             * from reading and writing data.
+             *
+             * To fix this, you need to update your Firestore Security Rules
+             * in your Firebase console. Go to:
+             * Firebase Console -> Firestore Database -> Rules tab
+             *
+             * For testing/development purposes, you can use these permissive rules:
+             *
+             * service cloud.firestore {
+             * match /databases/{database}/documents {
+             * match /artifacts/{appId}/public/data/{collectionId}/{documentId} {
+             * allow read, write: if true; // TEMPORARY: Allows all reads/writes for testing
+             * }
+             * }
+             * }
+             *
+             * Replace `{appId}` with your actual app ID if you're using a specific path,
+             * or ensure it matches the structure used in the code.
+             *
+             * For production, you should implement more secure rules, for example:
+             *
+             * service cloud.firestore {
+             * match /databases/{database}/documents {
+             * match /artifacts/{appId}/public/data/users/{userId} {
+             * allow read: if request.auth != null; // Authenticated users can read all user data
+             * allow write: if request.auth.uid == userId; // Users can only write their own profile
+             * }
+             * match /artifacts/{appId}/public/data/tasks/{taskId} {
+             * allow read: if request.auth != null; // Authenticated users can read tasks
+             * allow write: if request.auth.uid != null; // Authenticated users can write (HR assigns, Employee updates)
+             * }
+             * }
+             * }
+             *
+             * Make sure to publish your rules after making changes!
+             * *******************************************************************
+             */
+
+            // Listen for authentication state changes
+            onAuthStateChanged(auth, async (user) => {
+                currentUser = user;
+                if (currentUser) {
+                    // Fetch user's role and status from Firestore
+                    const userDocRef = doc(db, `artifacts/${appId}/public/data/users`, currentUser.uid);
+                    try {
+                        const userDocSnap = await getDoc(userDocRef);
+                        if (userDocSnap.exists()) {
+                            currentUserRole = userDocSnap.data().role;
+                            currentUserStatus = userDocSnap.data().status || 'unknown'; // Get status
+                            currentUserName = userDocSnap.data().name || currentUser.email; // Get name, fallback to email
+
+                            // Auto-status logic for employees on login
+                            if (currentUserRole === 'employee') {
+                                const todayDateString = getTodayDateString();
+                                const lastStatusUpdateDate = userDocSnap.data().lastStatusUpdateDate;
+                                const now = new Date();
+                                const currentHour = now.getHours();
+                                const currentMinute = now.getMinutes();
+                                const tenThirtyAMInMinutes = 10 * 60 + 30; // 10:30 AM
+
+                                if (lastStatusUpdateDate !== todayDateString) {
+                                    // It's a new day, handle status reset
+                                    if ((currentHour * 60 + currentMinute) >= tenThirtyAMInMinutes) {
+                                        // Past 10:30 AM, auto-mark absent if not already busy
+                                        if (currentUserStatus !== 'busy') {
+                                            await updateDoc(userDocRef, {
+                                                status: 'absent',
+                                                lastStatusUpdateDate: todayDateString,
+                                                absentReasonToHR: '' // Clear previous reason
+                                            });
+                                            currentUserStatus = 'absent'; // Update local state
+                                        }
+                                    } else {
+                                        // Before 10:30 AM, reset to 'open'
+                                        await updateDoc(userDocRef, {
+                                            status: 'open',
+                                            lastStatusUpdateDate: todayDateString,
+                                            absentReasonToHR: '' // Clear previous reason
+                                        });
+                                        currentUserStatus = 'open'; // Update local state
+                                    }
+                                }
+
+                                // If user is currently absent (manual or auto), and hasn't been prompted today, show modal
+                                if (currentUserStatus === 'absent' && !sessionStorage.getItem(`promptedForReason_${currentUser.uid}_${todayDateString}`)) {
+                                    showReasonForJoiningModal();
+                                    sessionStorage.setItem(`promptedForReason_${currentUser.uid}_${todayDateString}`, 'true'); // Store flag in session storage
+                                }
+                            }
+
+                        } else {
+                            console.warn("User document not found for:", currentUser.uid);
+                            currentUserRole = null;
+                            currentUserStatus = null;
+                            currentUserName = null; // Clear name
+                            showModal('Role Missing', 'Your user role could not be determined. Please contact support or re-register.');
+                        }
+                    } catch (error) {
+                        console.error("Error fetching user role/status:", error);
+                        currentUserRole = null;
+                        currentUserStatus = null;
+                        currentUserName = null; // Clear name
+                        showModal('Error', `Failed to fetch user role/status: ${error.message}`);
+                    }
+                    renderDashboard();
+                    resetInactivityTimer(); // Start/reset timer when user is logged in
+                } else {
+                    currentUserRole = null;
+                    currentUserStatus = null;
+                    currentUserName = null; // Clear name on logout
+                    renderAuthPage();
+                    clearTimeout(inactivityTimer); // Stop timer when logged out
+                }
+            });
+
+            // Set up real-time listeners for tasks and employees once Firebase is initialized
+            // Listener for tasks
+            const tasksCollectionRef = collection(db, `artifacts/${appId}/public/data/tasks`);
+            onSnapshot(tasksCollectionRef, (snapshot) => {
+                allTasks = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                // Re-render relevant dashboard section if user is logged in
+                if (currentUser) {
+                    if (currentUserRole === 'hr') {
+                        updateHRDashboardTasks();
+                        updateEmployeesOverview(); // Employees overview depends on tasks too
+                        updateAbsentEmployeesManagement(); // Also update absent management view
+                    } else if (currentUserRole === 'employee') {
+                        updateEmployeeDashboardTasks();
+                    }
+                }
+            }, (error) => {
+                console.error("Error fetching tasks in real-time:", error);
+                showModal('Error', 'Error loading tasks. Please check your connection and Firebase permissions.');
+            });
+
+            // Listener for employees (for HR dashboard, and employee's own status display)
+            const usersCollectionRef = collection(db, `artifacts/${appId}/public/data/users`);
+            onSnapshot(usersCollectionRef, (snapshot) => {
+                allEmployees = snapshot.docs.map(doc => ({
+                    uid: doc.id,
+                    ...doc.data()
+                }));
+
+                // Update current user's status and name if it changed
+                if (currentUser) {
+                    const selfUserDoc = allEmployees.find(emp => emp.uid === currentUser.uid);
+                    if (selfUserDoc) {
+                        let shouldReRender = false;
+                        if (currentUserStatus !== selfUserDoc.status) {
+                            currentUserStatus = selfUserDoc.status;
+                            shouldReRender = true;
+                        }
+                        if (currentUserName !== (selfUserDoc.name || currentUser.email)) {
+                            currentUserName = selfUserDoc.name || currentUser.email;
+                            shouldReRender = true;
+                        }
+
+                        if (shouldReRender && currentUserRole === 'employee' && document.getElementById('employee-tasks-list')) {
+                             renderEmployeeDashboard(); // Re-render to update current status/name display
+                        }
+                    }
+                }
+
+                // Update HR dashboard if HR is logged in
+                if (currentUser && currentUserRole === 'hr') {
+                    // Update the select dropdown in HR dashboard if it exists
+                    const employeeSelect = document.getElementById('employee-select');
+                    if (employeeSelect) {
+                        const currentSelectedValue = employeeSelect.value;
+                        employeeSelect.innerHTML = '<option value="">Select an Employee</option>';
+                        allEmployees.filter(emp => emp.role === 'employee').forEach(emp => {
+                            const option = document.createElement('option');
+                            option.value = emp.uid;
+                            option.textContent = `${emp.name || emp.email} (ID: ${emp.uid.substring(0, 8)}...)`; // Display name or email
+                            employeeSelect.appendChild(option);
+                        });
+                        employeeSelect.value = currentSelectedValue;
+                    }
+                    updateEmployeesOverview();
+                    updateAbsentEmployeesManagement();
+                }
+            }, (error) => {
+                console.error("Error fetching employees in real-time:", error);
+                showModal('Error', 'Error loading employee data. Please check your connection and Firebase permissions.');
+            });
+        };
+    </script>
+</body>
+</html>
