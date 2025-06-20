@@ -589,6 +589,71 @@
       background-color: #3d8b40;
     }
 
+    .other-input-container {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .back-to-page-btn {
+      background-color: #555;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .back-to-page-btn:hover {
+      background-color: #444;
+    }
+
+    .select-mode-btn {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .select-mode-btn:hover {
+      background-color: #1976D2;
+    }
+
+    .delete-selected-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 15px;
+      margin-left: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      display: none;
+    }
+
+    .delete-selected-btn:hover {
+      background-color: #d32f2f;
+    }
+
+    tr.selected {
+      background-color: #e3f2fd !important;
+    }
+
     @media (max-width: 768px) {
       .header {
         flex-direction: column;
@@ -692,7 +757,11 @@
                 <option value="Electrical">Electrical</option>
                 <option value="Chemical">Chemical</option>
                 <option value="Miscellaneous">Miscellaneous</option>
+                <option value="Other">Other</option>
               </select>
+              <div id="category-other-container" class="other-input-container">
+                <input type="text" id="category-other" placeholder="Enter custom category">
+              </div>
             </div>
           </div>
 
@@ -707,7 +776,11 @@
                 <option value="Box">Box</option>
                 <option value="Set">Set</option>
                 <option value="Pair">Pair</option>
+                <option value="Other">Other</option>
               </select>
+              <div id="uom-other-container" class="other-input-container">
+                <input type="text" id="uom-other" placeholder="Enter custom UOM">
+              </div>
             </div>
             <div class="form-group">
               <label for="date">Date</label>
@@ -721,7 +794,11 @@
                 <option value="Semi-Finished">Semi-Finished</option>
                 <option value="Consumables">Consumables</option>
                 <option value="Tools">Tools</option>
+                <option value="Other">Other</option>
               </select>
+              <div id="type-other-container" class="other-input-container">
+                <input type="text" id="type-other" placeholder="Enter custom type">
+              </div>
             </div>
           </div>
 
@@ -792,6 +869,9 @@
               <button type="button" class="action-btn" id="download-json-btn" style="display: none; margin-top: 10px; background-color: #2196F3; color: white;">
                 <i class="fas fa-download"></i> Download QR JSON
               </button>
+              <button type="button" class="back-to-page-btn" id="back-to-page-btn" onclick="window.location.href='1.html'">
+                <i class="fas fa-arrow-left"></i> Back to Previous Page
+              </button>
             </div>
           </div>
 
@@ -812,9 +892,15 @@
         </form>
       </div>
 
+
+      <button class="delete-selected-btn" id="delete-selected-btn">
+        <i class="fas fa-trash"></i> Delete Selected
+      </button>
+
       <table id="inventory-table">
         <thead>
           <tr>
+            <th>Select</th>
             <th>Part Code</th>
             <th>Description</th>
             <th>Make</th>
@@ -832,15 +918,21 @@
           </tr>
         </thead>
         <tbody id="inventory-body">
-          <tr><td colspan="14" class="loading-message">Loading...</td></tr>
+          <tr><td colspan="15" class="loading-message">Loading...</td></tr>
         </tbody>
       </table>
     </div>
 
     <div id="purchase-section" style="display: none;">
+
+      <button class="delete-selected-btn" id="purchase-delete-selected-btn">
+        <i class="fas fa-trash"></i> Delete Selected
+      </button>
+
       <table id="purchase-table">
         <thead>
           <tr>
+            <th>Select</th>
             <th>Part Code</th>
             <th>Description</th>
             <th>Make</th>
@@ -857,15 +949,21 @@
           </tr>
         </thead>
         <tbody id="purchase-body">
-          <tr><td colspan="13" class="loading-message">Loading...</td></tr>
+          <tr><td colspan="14" class="loading-message">Loading...</td></tr>
         </tbody>
       </table>
     </div>
 
     <div id="sales-section" style="display: none;">
+
+      <button class="delete-selected-btn" id="sales-delete-selected-btn">
+        <i class="fas fa-trash"></i> Delete Selected
+      </button>
+
       <table id="sales-table">
         <thead>
           <tr>
+            <th>Select</th>
             <th>Part Code</th>
             <th>Description</th>
             <th>Make</th>
@@ -882,15 +980,21 @@
           </tr>
         </thead>
         <tbody id="sales-body">
-          <tr><td colspan="12" class="loading-message">Loading...</td></tr>
+          <tr><td colspan="14" class="loading-message">Loading...</td></tr>
         </tbody>
       </table>
     </div>
 
     <div id="issue-slip-section" style="display: none;">
+
+      <button class="delete-selected-btn" id="issue-slip-delete-selected-btn">
+        <i class="fas fa-trash"></i> Delete Selected
+      </button>
+
       <table id="issue-slip-table">
         <thead>
           <tr>
+            <th>Select</th>
             <th>Part Code</th>
             <th>Description</th>
             <th>Issued Qty</th>
@@ -905,7 +1009,7 @@
           </tr>
         </thead>
         <tbody id="issue-slip-body">
-          <tr><td colspan="11" class="loading-message">Loading material issues...</td></tr>
+          <tr><td colspan="12" class="loading-message">Loading material issues...</td></tr>
         </tbody>
       </table>
     </div>
@@ -1029,6 +1133,14 @@
     const downloadJsonBtn = document.getElementById('download-json-btn');
     const appHeader = document.getElementById('app-header');
     const mainContent = document.getElementById('main-content');
+    const selectModeBtn = document.getElementById('select-mode-btn');
+    const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+    const purchaseSelectModeBtn = document.getElementById('purchase-select-mode-btn');
+    const purchaseDeleteSelectedBtn = document.getElementById('purchase-delete-selected-btn');
+    const salesSelectModeBtn = document.getElementById('sales-select-mode-btn');
+    const salesDeleteSelectedBtn = document.getElementById('sales-delete-selected-btn');
+    const issueSlipSelectModeBtn = document.getElementById('issue-slip-select-mode-btn');
+    const issueSlipDeleteSelectedBtn = document.getElementById('issue-slip-delete-selected-btn');
 
     // Variables for managing subscriptions and current item being edited
     let currentItemId = null;
@@ -1036,6 +1148,11 @@
     let unsubscribePurchases = null;
     let unsubscribeSales = null;
     let unsubscribeMaterialIssues = null;
+    let isSelectMode = false;
+    let selectedItems = [];
+    let selectedPurchases = [];
+    let selectedSales = [];
+    let selectedMaterialIssues = [];
 
     // Chatbot specific elements and state
     const chatbotToggle = document.getElementById('chatbot-toggle');
@@ -1107,9 +1224,15 @@
         description: document.getElementById('description-input').value.trim(),
         make: document.getElementById('make').value.trim(),
         hsn: document.getElementById('hsn').value.trim(),
-        category: document.getElementById('category').value,
-        type: document.getElementById('type').value,
-        uom: document.getElementById('uom').value,
+        category: document.getElementById('category').value === 'Other' ?
+                 document.getElementById('category-other').value.trim() :
+                 document.getElementById('category').value,
+        type: document.getElementById('type').value === 'Other' ?
+              document.getElementById('type-other').value.trim() :
+              document.getElementById('type').value,
+        uom: document.getElementById('uom').value === 'Other' ?
+             document.getElementById('uom-other').value.trim() :
+             document.getElementById('uom').value,
         date: document.getElementById('date').value,
         purchaseAmount: parseFloat(document.getElementById('purchase-amount').value) || 0,
         purchaseQty: parseInt(document.getElementById('purchase-qty').value) || 0,
@@ -1132,15 +1255,34 @@
     transactionType.addEventListener('change', toggleFormFields);
 
     // Add event listeners to update QR code preview
-    ['part-code', 'description-input', 'make', 'hsn', 'category', 'uom', 'date', 'type',
-     'purchase-amount', 'purchase-qty', 'purchase-from',
-     'sold-qty', 'sold-price', 'sold-to',
-     'issued-qty', 'employee-name', 'employee-phone', 'employee-position', 'employee-code', 'issue-remarks'
+    ['part-code', 'description-input', 'make', 'hsn', 'category', 'category-other', 'type', 'type-other',
+     'uom', 'uom-other', 'date', 'purchase-amount', 'purchase-qty', 'purchase-from',
+     'sold-qty', 'sold-price', 'sold-to', 'issued-qty', 'employee-name', 'employee-phone',
+     'employee-position', 'employee-code', 'issue-remarks'
     ].forEach(id => {
       const element = document.getElementById(id);
       if (element) {
         element.addEventListener('input', updateQRCodePreview);
       }
+    });
+
+    // Handle "Other" selection for category, UOM, and type
+    document.getElementById('category').addEventListener('change', function() {
+      const otherContainer = document.getElementById('category-other-container');
+      otherContainer.style.display = this.value === 'Other' ? 'block' : 'none';
+      updateQRCodePreview();
+    });
+
+    document.getElementById('uom').addEventListener('change', function() {
+      const otherContainer = document.getElementById('uom-other-container');
+      otherContainer.style.display = this.value === 'Other' ? 'block' : 'none';
+      updateQRCodePreview();
+    });
+
+    document.getElementById('type').addEventListener('change', function() {
+      const otherContainer = document.getElementById('type-other-container');
+      otherContainer.style.display = this.value === 'Other' ? 'block' : 'none';
+      updateQRCodePreview();
     });
 
     // Initial form setup
@@ -1280,9 +1422,15 @@
         description: document.getElementById('description-input').value.trim() || 'N/A',
         make: document.getElementById('make').value.trim() || 'N/A',
         hsn: document.getElementById('hsn').value.trim() || 'N/A',
-        category: document.getElementById('category').value || 'N/A',
-        type: document.getElementById('type').value || 'N/A',
-        uom: document.getElementById('uom').value || 'N/A',
+        category: document.getElementById('category').value === 'Other' ?
+                 document.getElementById('category-other').value.trim() || 'N/A' :
+                 document.getElementById('category').value || 'N/A',
+        type: document.getElementById('type').value === 'Other' ?
+              document.getElementById('type-other').value.trim() || 'N/A' :
+              document.getElementById('type').value || 'N/A',
+        uom: document.getElementById('uom').value === 'Other' ?
+             document.getElementById('uom-other').value.trim() || 'N/A' :
+             document.getElementById('uom').value || 'N/A',
         purchaseAmount: parseFloat(document.getElementById('purchase-amount').value) || 0,
         purchaseQty: parseInt(document.getElementById('purchase-qty').value) || 0,
         purchaseFrom: document.getElementById('purchase-from').value.trim() || 'N/A',
@@ -1316,9 +1464,15 @@
       const description = document.getElementById('description-input').value.trim();
       const make = document.getElementById('make').value.trim();
       const hsn = document.getElementById('hsn').value.trim();
-      const category = document.getElementById('category').value;
-      const itemType = document.getElementById('type').value;
-      const uom = document.getElementById('uom').value;
+      const category = document.getElementById('category').value === 'Other' ?
+                      document.getElementById('category-other').value.trim() :
+                      document.getElementById('category').value;
+      const itemType = document.getElementById('type').value === 'Other' ?
+                       document.getElementById('type-other').value.trim() :
+                       document.getElementById('type').value;
+      const uom = document.getElementById('uom').value === 'Other' ?
+                  document.getElementById('uom-other').value.trim() :
+                  document.getElementById('uom').value;
       const date = document.getElementById('date').value;
 
       if (!partCode || !description || !make || !hsn || !category || !itemType || !uom || !date) {
@@ -1455,9 +1609,15 @@
       const description = document.getElementById('description-input').value.trim();
       const make = document.getElementById('make').value.trim();
       const hsn = document.getElementById('hsn').value.trim();
-      const category = document.getElementById('category').value;
-      const itemType = document.getElementById('type').value;
-      const uom = document.getElementById('uom').value;
+      const category = document.getElementById('category').value === 'Other' ?
+                      document.getElementById('category-other').value.trim() :
+                      document.getElementById('category').value;
+      const itemType = document.getElementById('type').value === 'Other' ?
+                       document.getElementById('type-other').value.trim() :
+                       document.getElementById('type').value;
+      const uom = document.getElementById('uom').value === 'Other' ?
+                  document.getElementById('uom-other').value.trim() :
+                  document.getElementById('uom').value;
       const date = document.getElementById('date').value;
       const soldQty = parseInt(document.getElementById('sold-qty').value) || 0;
       const soldPrice = parseFloat(document.getElementById('sold-price').value) || 0;
@@ -1515,9 +1675,15 @@
       const description = document.getElementById('description-input').value.trim();
       const make = document.getElementById('make').value.trim();
       const hsn = document.getElementById('hsn').value.trim();
-      const category = document.getElementById('category').value;
-      const itemType = document.getElementById('type').value;
-      const uom = document.getElementById('uom').value;
+      const category = document.getElementById('category').value === 'Other' ?
+                      document.getElementById('category-other').value.trim() :
+                      document.getElementById('category').value;
+      const itemType = document.getElementById('type').value === 'Other' ?
+                       document.getElementById('type-other').value.trim() :
+                       document.getElementById('type').value;
+      const uom = document.getElementById('uom').value === 'Other' ?
+                  document.getElementById('uom-other').value.trim() :
+                  document.getElementById('uom').value;
       const date = document.getElementById('date').value;
       const issuedQty = parseInt(document.getElementById('issued-qty').value) || 0;
       const employeeName = document.getElementById('employee-name').value.trim();
@@ -1586,6 +1752,9 @@
       form.reset();
       currentItemId = null;
       document.getElementById('date').valueAsDate = new Date();
+      document.getElementById('category-other-container').style.display = 'none';
+      document.getElementById('uom-other-container').style.display = 'none';
+      document.getElementById('type-other-container').style.display = 'none';
       toggleFormFields();
       updateQRCodePreview();
       cancelBtn.style.display = 'none';
@@ -1650,31 +1819,49 @@
     // Fetches inventory items
     async function fetchInventory() {
       if (unsubscribeItems) unsubscribeItems();
-      tableBody.innerHTML = '<tr><td colspan="14" class="loading-message">Loading inventory...</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="15" class="loading-message">Loading inventory...</td></tr>';
 
       unsubscribeItems = db.collection('inventory')
         .orderBy('timestamp', 'desc')
         .onSnapshot(snapshot => {
           tableBody.innerHTML = '';
           if (snapshot.empty) {
-            tableBody.innerHTML = '<tr><td colspan="14" class="loading-message">No inventory items found.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="15" class="loading-message">No inventory items found.</td></tr>';
             return;
           }
           snapshot.forEach(doc => {
             const item = { id: doc.id, ...doc.data() };
             const row = tableBody.insertRow();
 
-            row.insertCell(0).textContent = displayValue(item.partCode);
-            row.insertCell(1).textContent = displayValue(item.description);
-            row.insertCell(2).textContent = displayValue(item.make);
-            row.insertCell(3).textContent = displayValue(item.hsn);
-            row.insertCell(4).textContent = displayValue(item.category);
-            row.insertCell(5).textContent = displayValue(item.type);
-            row.insertCell(6).textContent = displayValue(item.uom);
-            row.insertCell(7).textContent = displayValue(item.purchaseQty || 0);
-            row.insertCell(8).textContent = displayValue(item.soldQty || 0);
-            row.insertCell(9).textContent = displayValue(item.issuedQty || 0);
-            const availableQtyCell = row.insertCell(10);
+            // Add checkbox cell for selection
+            const selectCell = row.insertCell(0);
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.style.transform = 'scale(1.2)';
+            checkbox.style.cursor = 'pointer';
+            checkbox.addEventListener('change', function() {
+              if (this.checked) {
+                selectedItems.push(item.id);
+                row.classList.add('selected');
+              } else {
+                selectedItems = selectedItems.filter(id => id !== item.id);
+                row.classList.remove('selected');
+              }
+              updateDeleteSelectedButton();
+            });
+            selectCell.appendChild(checkbox);
+
+            row.insertCell(1).textContent = displayValue(item.partCode);
+            row.insertCell(2).textContent = displayValue(item.description);
+            row.insertCell(3).textContent = displayValue(item.make);
+            row.insertCell(4).textContent = displayValue(item.hsn);
+            row.insertCell(5).textContent = displayValue(item.category);
+            row.insertCell(6).textContent = displayValue(item.type);
+            row.insertCell(7).textContent = displayValue(item.uom);
+            row.insertCell(8).textContent = displayValue(item.purchaseQty || 0);
+            row.insertCell(9).textContent = displayValue(item.soldQty || 0);
+            row.insertCell(10).textContent = displayValue(item.issuedQty || 0);
+            const availableQtyCell = row.insertCell(11);
             availableQtyCell.textContent = displayValue(item.availableQty || 0);
 
             if (item.availableQty < 10) {
@@ -1685,18 +1872,18 @@
               availableQtyCell.classList.add('status-high');
             }
 
-            const approvalStatusCell = row.insertCell(11);
+            const approvalStatusCell = row.insertCell(12);
             approvalStatusCell.textContent = displayValue(item.approvalStatus || 'Pending');
             approvalStatusCell.classList.add(getApprovalStatusClass(item.approvalStatus));
 
-            const qrCodeCell = row.insertCell(12);
+            const qrCodeCell = row.insertCell(13);
             const qrImg = document.createElement('img');
             qrImg.src = generateQRCode(generateQRData(item));
             qrImg.alt = 'QR Code';
             qrImg.classList.add('qr');
             qrCodeCell.appendChild(qrImg);
 
-            const actionsCell = row.insertCell(13);
+            const actionsCell = row.insertCell(14);
             actionsCell.classList.add('action-btns');
 
             const viewBtn = document.createElement('button');
@@ -1716,12 +1903,10 @@
             deleteBtn.classList.add('action-btn', 'delete-btn');
             deleteBtn.onclick = () => deleteItem(item.id);
             actionsCell.appendChild(deleteBtn);
-
-
           });
         }, error => {
           console.error("Error fetching inventory: ", error);
-          tableBody.innerHTML = '<tr><td colspan="14" class="loading-message">Error loading inventory.</td></tr>';
+          tableBody.innerHTML = '<tr><td colspan="15" class="loading-message">Error loading inventory.</td></tr>';
         });
     }
 
@@ -1750,36 +1935,55 @@
     // Fetches purchase records
     async function fetchPurchases() {
       if (unsubscribePurchases) unsubscribePurchases();
-      purchaseBody.innerHTML = '<tr><td colspan="13" class="loading-message">Loading purchases...</td></tr>';
+      purchaseBody.innerHTML = '<tr><td colspan="14" class="loading-message">Loading purchases...</td></tr>';
 
       unsubscribePurchases = db.collection('purchases')
         .orderBy('timestamp', 'desc')
         .onSnapshot(snapshot => {
           purchaseBody.innerHTML = '';
           if (snapshot.empty) {
-            purchaseBody.innerHTML = '<tr><td colspan="13" class="loading-message">No purchase records found.</td></tr>';
+            purchaseBody.innerHTML = '<tr><td colspan="14" class="loading-message">No purchase records found.</td></tr>';
             return;
           }
           snapshot.forEach(doc => {
             const purchase = { id: doc.id, ...doc.data() };
             const row = purchaseBody.insertRow();
-            row.insertCell(0).textContent = displayValue(purchase.partCode);
-            row.insertCell(1).textContent = displayValue(purchase.description);
-            row.insertCell(2).textContent = displayValue(purchase.make);
-            row.insertCell(3).textContent = displayValue(purchase.hsn);
-            row.insertCell(4).textContent = displayValue(purchase.category);
-            row.insertCell(5).textContent = displayValue(purchase.type);
-            row.insertCell(6).textContent = displayValue(purchase.uom);
-            row.insertCell(7).textContent = displayValue(purchase.purchaseAmount ? purchase.purchaseAmount.toFixed(2) : '0.00');
-            row.insertCell(8).textContent = displayValue(purchase.purchaseQty);
-            row.insertCell(9).textContent = displayValue(purchase.purchaseFrom);
-            row.insertCell(10).textContent = displayValue(purchase.date);
 
-            const approvalStatusCell = row.insertCell(11);
+            // Add checkbox cell for selection
+            const selectCell = row.insertCell(0);
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.style.transform = 'scale(1.2)';
+            checkbox.style.cursor = 'pointer';
+            checkbox.addEventListener('change', function() {
+              if (this.checked) {
+                selectedPurchases.push(purchase.id);
+                row.classList.add('selected');
+              } else {
+                selectedPurchases = selectedPurchases.filter(id => id !== purchase.id);
+                row.classList.remove('selected');
+              }
+              updatePurchaseDeleteSelectedButton();
+            });
+            selectCell.appendChild(checkbox);
+
+            row.insertCell(1).textContent = displayValue(purchase.partCode);
+            row.insertCell(2).textContent = displayValue(purchase.description);
+            row.insertCell(3).textContent = displayValue(purchase.make);
+            row.insertCell(4).textContent = displayValue(purchase.hsn);
+            row.insertCell(5).textContent = displayValue(purchase.category);
+            row.insertCell(6).textContent = displayValue(purchase.type);
+            row.insertCell(7).textContent = displayValue(purchase.uom);
+            row.insertCell(8).textContent = displayValue(purchase.purchaseAmount ? purchase.purchaseAmount.toFixed(2) : '0.00');
+            row.insertCell(9).textContent = displayValue(purchase.purchaseQty);
+            row.insertCell(10).textContent = displayValue(purchase.purchaseFrom);
+            row.insertCell(11).textContent = displayValue(purchase.date);
+
+            const approvalStatusCell = row.insertCell(12);
             approvalStatusCell.textContent = displayValue(purchase.approvalStatus || 'Pending');
             approvalStatusCell.classList.add(getApprovalStatusClass(purchase.approvalStatus));
 
-            const actionsCell = row.insertCell(12);
+            const actionsCell = row.insertCell(13);
             actionsCell.classList.add('action-btns');
 
             const editBtn = document.createElement('button');
@@ -1799,12 +2003,10 @@
             downloadBtn.classList.add('action-btn', 'submit-btn');
             downloadBtn.onclick = () => downloadPurchaseBill(doc.id);
             actionsCell.appendChild(downloadBtn);
-
-
           });
         }, error => {
           console.error("Error fetching purchases: ", error);
-          purchaseBody.innerHTML = '<tr><td colspan="13" class="loading-message">Error loading purchases.</td></tr>';
+          purchaseBody.innerHTML = '<tr><td colspan="14" class="loading-message">Error loading purchases.</td></tr>';
         });
     }
 
@@ -1833,542 +2035,816 @@
     // Fetches sales records
     async function fetchSales() {
       if (unsubscribeSales) unsubscribeSales();
-      salesBody.innerHTML = '<tr><td colspan="12" class="loading-message">Loading sales...</td></tr>';
+      salesBody.innerHTML = '<tr><td colspan="14" class="loading-message">Loading sales...</td></tr>';
 
-unsubscribeSales = db.collection('sales')
-  .orderBy('timestamp', 'desc')
-  .onSnapshot(snapshot => {
-    salesBody.innerHTML = '';
-    if (snapshot.empty) {
-      salesBody.innerHTML = '<tr><td colspan="12" class="loading-message">No sales records found.</td></tr>';
-      return;
+      unsubscribeSales = db.collection('sales')
+        .orderBy('timestamp', 'desc')
+        .onSnapshot(snapshot => {
+          salesBody.innerHTML = '';
+          if (snapshot.empty) {
+            salesBody.innerHTML = '<tr><td colspan="14" class="loading-message">No sales records found.</td></tr>';
+            return;
+          }
+          snapshot.forEach(doc => {
+            const sale = { id: doc.id, ...doc.data() };
+            const row = salesBody.insertRow();
+
+            // Add checkbox cell for selection
+            const selectCell = row.insertCell(0);
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.style.transform = 'scale(1.2)';
+            checkbox.style.cursor = 'pointer';
+            checkbox.addEventListener('change', function() {
+              if (this.checked) {
+                selectedSales.push(sale.id);
+                row.classList.add('selected');
+              } else {
+                selectedSales = selectedSales.filter(id => id !== sale.id);
+                row.classList.remove('selected');
+              }
+              updateSalesDeleteSelectedButton();
+            });
+            selectCell.appendChild(checkbox);
+
+            row.insertCell(1).textContent = displayValue(sale.partCode);
+            row.insertCell(2).textContent = displayValue(sale.description);
+            row.insertCell(3).textContent = displayValue(sale.make);
+            row.insertCell(4).textContent = displayValue(sale.hsn);
+            row.insertCell(5).textContent = displayValue(sale.category);
+            row.insertCell(6).textContent = displayValue(sale.type);
+            row.insertCell(7).textContent = displayValue(sale.uom);
+            row.insertCell(8).textContent = displayValue(sale.soldQty);
+            row.insertCell(9).textContent = displayValue(sale.soldPrice ? sale.soldPrice.toFixed(2) : '0.00');
+            row.insertCell(10).textContent = displayValue(sale.soldTo);
+            row.insertCell(11).textContent = displayValue(sale.date);
+
+            const approvalStatusCell = row.insertCell(12);
+            approvalStatusCell.textContent = displayValue(sale.approvalStatus || 'Pending');
+            approvalStatusCell.classList.add(getApprovalStatusClass(sale.approvalStatus));
+
+            const actionsCell = row.insertCell(13);
+            actionsCell.classList.add('action-btns');
+
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+            editBtn.classList.add('action-btn', 'edit-btn');
+            editBtn.onclick = () => editSale(doc.id);
+            actionsCell.appendChild(editBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+            deleteBtn.classList.add('action-btn', 'delete-btn');
+            deleteBtn.onclick = () => deleteSale(doc.id);
+            actionsCell.appendChild(deleteBtn);
+
+            const downloadBtn = document.createElement('button');
+            downloadBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Invoice';
+            downloadBtn.classList.add('action-btn', 'submit-btn');
+            downloadBtn.onclick = () => downloadSalesBill(doc.id);
+            actionsCell.appendChild(downloadBtn);
+          });
+        }, error => {
+          console.error("Error fetching sales: ", error);
+          salesBody.innerHTML = '<tr><td colspan="14" class="loading-message">Error loading sales.</td></tr>';
+        });
     }
-    snapshot.forEach(doc => {
-      const sale = { id: doc.id, ...doc.data() };
-      const row = salesBody.insertRow();
-      row.insertCell(0).textContent = displayValue(sale.partCode);
-      row.insertCell(1).textContent = displayValue(sale.description);
-      row.insertCell(2).textContent = displayValue(sale.make);
-      row.insertCell(3).textContent = displayValue(sale.hsn);
-      row.insertCell(4).textContent = displayValue(sale.category);
-      row.insertCell(5).textContent = displayValue(sale.type);
-      row.insertCell(6).textContent = displayValue(sale.uom);
-      row.insertCell(7).textContent = displayValue(sale.soldQty);
-      row.insertCell(8).textContent = displayValue(sale.soldPrice ? sale.soldPrice.toFixed(2) : '0.00');
-      row.insertCell(9).textContent = displayValue(sale.soldTo);
-      row.insertCell(10).textContent = displayValue(sale.date);
 
-      const approvalStatusCell = row.insertCell(11);
-      approvalStatusCell.textContent = displayValue(sale.approvalStatus || 'Pending');
-      approvalStatusCell.classList.add(getApprovalStatusClass(sale.approvalStatus));
-
-      const actionsCell = row.insertCell(12);
-      actionsCell.classList.add('action-btns');
-
-      const editBtn = document.createElement('button');
-      editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
-      editBtn.classList.add('action-btn', 'edit-btn');
-      editBtn.onclick = () => editSale(doc.id);
-      actionsCell.appendChild(editBtn);
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
-      deleteBtn.classList.add('action-btn', 'delete-btn');
-      deleteBtn.onclick = () => deleteSale(doc.id);
-      actionsCell.appendChild(deleteBtn);
-
-      const downloadBtn = document.createElement('button');
-      downloadBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Invoice';
-      downloadBtn.classList.add('action-btn', 'submit-btn');
-      downloadBtn.onclick = () => downloadSalesBill(doc.id);
-      actionsCell.appendChild(downloadBtn);
-
-
-    });
-  }, error => {
-    console.error("Error fetching sales: ", error);
-    salesBody.innerHTML = '<tr><td colspan="12" class="loading-message">Error loading sales.</td></tr>';
-  });
-}
-
-// Approves a sale record
-async function approveSale(saleId) {
-  try {
-    await db.collection('sales').doc(saleId).update({ approvalStatus: 'Approved' });
-    appendMessage(`Sale record ${saleId} approved.`, 'bot');
-  } catch (error) {
-    console.error("Error approving sale:", error);
-    appendMessage("Error approving sale.", 'bot');
-  }
-}
-
-// Rejects a sale record
-async function rejectSale(saleId) {
-  try {
-    await db.collection('sales').doc(saleId).update({ approvalStatus: 'Rejected' });
-    appendMessage(`Sale record ${saleId} rejected.`, 'bot');
-  } catch (error) {
-    console.error("Error rejecting sale:", error);
-    appendMessage("Error rejecting sale.", 'bot');
-  }
-}
-
-// Fetches material issue records
-async function fetchMaterialIssues() {
-  if (unsubscribeMaterialIssues) unsubscribeMaterialIssues();
-  issueSlipBody.innerHTML = '<tr><td colspan="11" class="loading-message">Loading material issues...</td></tr>';
-
-  unsubscribeMaterialIssues = db.collection('materialIssues')
-    .orderBy('timestamp', 'desc')
-    .onSnapshot(snapshot => {
-      issueSlipBody.innerHTML = '';
-      if (snapshot.empty) {
-        issueSlipBody.innerHTML = '<tr><td colspan="11" class="loading-message">No material issue records found.</td></tr>';
-        return;
+    // Approves a sale record
+    async function approveSale(saleId) {
+      try {
+        await db.collection('sales').doc(saleId).update({ approvalStatus: 'Approved' });
+        appendMessage(`Sale record ${saleId} approved.`, 'bot');
+      } catch (error) {
+        console.error("Error approving sale:", error);
+        appendMessage("Error approving sale.", 'bot');
       }
-      snapshot.forEach(doc => {
-        const issue = { id: doc.id, ...doc.data() };
-        const row = issueSlipBody.insertRow();
-        row.insertCell(0).textContent = displayValue(issue.partCode);
-        row.insertCell(1).textContent = displayValue(issue.description);
-        row.insertCell(2).textContent = displayValue(issue.issuedQty);
-        row.insertCell(3).textContent = displayValue(issue.employeeName);
-        row.insertCell(4).textContent = displayValue(issue.employeePhone);
-        row.insertCell(5).textContent = displayValue(issue.employeePosition);
-        row.insertCell(6).textContent = displayValue(issue.employeeCode);
-        row.insertCell(7).textContent = displayValue(issue.date);
-        row.insertCell(8).textContent = displayValue(issue.issueRemarks);
+    }
 
-        const approvalStatusCell = row.insertCell(9);
-        approvalStatusCell.textContent = displayValue(issue.approvalStatus || 'Pending');
-        approvalStatusCell.classList.add(getApprovalStatusClass(issue.approvalStatus));
+    // Rejects a sale record
+    async function rejectSale(saleId) {
+      try {
+        await db.collection('sales').doc(saleId).update({ approvalStatus: 'Rejected' });
+        appendMessage(`Sale record ${saleId} rejected.`, 'bot');
+      } catch (error) {
+        console.error("Error rejecting sale:", error);
+        appendMessage("Error rejecting sale.", 'bot');
+      }
+    }
 
-        const actionsCell = row.insertCell(10);
-        actionsCell.classList.add('action-btns');
+    // Fetches material issue records
+    async function fetchMaterialIssues() {
+      if (unsubscribeMaterialIssues) unsubscribeMaterialIssues();
+      issueSlipBody.innerHTML = '<tr><td colspan="12" class="loading-message">Loading material issues...</td></tr>';
 
-        const editBtn = document.createElement('button');
-        editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
-        editBtn.classList.add('action-btn', 'edit-btn');
-        editBtn.onclick = () => editMaterialIssue(doc.id);
-        actionsCell.appendChild(editBtn);
+      unsubscribeMaterialIssues = db.collection('materialIssues')
+        .orderBy('timestamp', 'desc')
+        .onSnapshot(snapshot => {
+          issueSlipBody.innerHTML = '';
+          if (snapshot.empty) {
+            issueSlipBody.innerHTML = '<tr><td colspan="12" class="loading-message">No material issue records found.</td></tr>';
+            return;
+          }
+          snapshot.forEach(doc => {
+            const issue = { id: doc.id, ...doc.data() };
+            const row = issueSlipBody.insertRow();
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
-        deleteBtn.classList.add('action-btn', 'delete-btn');
-        deleteBtn.onclick = () => deleteMaterialIssue(doc.id);
-        actionsCell.appendChild(deleteBtn);
+            // Add checkbox cell for selection
+            const selectCell = row.insertCell(0);
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.style.transform = 'scale(1.2)';
+            checkbox.style.cursor = 'pointer';
+            checkbox.addEventListener('change', function() {
+              if (this.checked) {
+                selectedMaterialIssues.push(issue.id);
+                row.classList.add('selected');
+              } else {
+                selectedMaterialIssues = selectedMaterialIssues.filter(id => id !== issue.id);
+                row.classList.remove('selected');
+              }
+              updateMaterialIssuesDeleteSelectedButton();
+            });
+            selectCell.appendChild(checkbox);
 
+            row.insertCell(1).textContent = displayValue(issue.partCode);
+            row.insertCell(2).textContent = displayValue(issue.description);
+            row.insertCell(3).textContent = displayValue(issue.issuedQty);
+            row.insertCell(4).textContent = displayValue(issue.employeeName);
+            row.insertCell(5).textContent = displayValue(issue.employeePhone);
+            row.insertCell(6).textContent = displayValue(issue.employeePosition);
+            row.insertCell(7).textContent = displayValue(issue.employeeCode);
+            row.insertCell(8).textContent = displayValue(issue.date);
+            row.insertCell(9).textContent = displayValue(issue.issueRemarks);
 
+            const approvalStatusCell = row.insertCell(10);
+            approvalStatusCell.textContent = displayValue(issue.approvalStatus || 'Pending');
+            approvalStatusCell.classList.add(getApprovalStatusClass(issue.approvalStatus));
 
-        const returnBtn = document.createElement('button');
-        returnBtn.innerHTML = '<i class="fas fa-undo"></i> Return';
-        returnBtn.classList.add('action-btn', 'submit-btn');
-        returnBtn.onclick = () => returnMaterialIssue(doc.id, issue);
-        actionsCell.appendChild(returnBtn);
+            const actionsCell = row.insertCell(11);
+            actionsCell.classList.add('action-btns');
+
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+            editBtn.classList.add('action-btn', 'edit-btn');
+            editBtn.onclick = () => editMaterialIssue(doc.id);
+            actionsCell.appendChild(editBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+            deleteBtn.classList.add('action-btn', 'delete-btn');
+            deleteBtn.onclick = () => deleteMaterialIssue(doc.id);
+            actionsCell.appendChild(deleteBtn);
+
+            const returnBtn = document.createElement('button');
+            returnBtn.innerHTML = '<i class="fas fa-undo"></i> Return';
+            returnBtn.classList.add('action-btn', 'submit-btn');
+            returnBtn.onclick = () => returnMaterialIssue(doc.id, issue);
+            actionsCell.appendChild(returnBtn);
+          });
+        }, error => {
+          console.error("Error fetching material issues: ", error);
+          issueSlipBody.innerHTML = '<tr><td colspan="12" class="loading-message">Error loading material issues.</td></tr>';
+        });
+    }
+
+    // Approves a material issue record
+    async function approveMaterialIssue(issueId) {
+      try {
+        await db.collection('materialIssues').doc(issueId).update({ approvalStatus: 'Approved' });
+        appendMessage(`Material issue record ${issueId} approved.`, 'bot');
+      } catch (error) {
+        console.error("Error approving material issue:", error);
+        appendMessage("Error approving material issue.", 'bot');
+      }
+    }
+
+    // Rejects a material issue record
+    async function rejectMaterialIssue(issueId) {
+      try {
+        await db.collection('materialIssues').doc(issueId).update({ approvalStatus: 'Rejected' });
+        appendMessage(`Material issue record ${issueId} rejected.`, 'bot');
+      } catch (error) {
+        console.error("Error rejecting material issue:", error);
+        appendMessage("Error rejecting material issue.", 'bot');
+      }
+    }
+
+    // Returns a material issue
+    async function returnMaterialIssue(issueId, issue) {
+      try {
+        const existingItem = await getItemFromFirestore(issueId);
+        if (!existingItem) {
+          appendMessage('Inventory item not found for return.', 'bot');
+          return;
+        }
+
+        const returnedQty = issue.issuedQty || 0;
+        const newIssuedQty = (existingItem.issuedQty || 0) - returnedQty;
+        const newAvailableQty = (existingItem.availableQty || 0) + returnedQty;
+
+        await db.collection('inventory').doc(issueId).update({
+          issuedQty: newIssuedQty,
+          availableQty: newAvailableQty,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await db.collection('materialIssues').doc(issueId).delete();
+        appendMessage(`Material issue ${issueId} returned successfully.`, 'bot');
+      } catch (error) {
+        console.error("Error returning material issue:", error);
+        appendMessage("Error returning material issue.", 'bot');
+      }
+    }
+
+    // Edits an inventory item
+    async function editItem(itemId) {
+      try {
+        const doc = await db.collection('inventory').doc(itemId).get();
+        if (!doc.exists) {
+          appendMessage('Item not found.', 'bot');
+          return;
+        }
+        const item = doc.data();
+        transactionType.value = 'purchase';
+        toggleFormFields();
+        document.getElementById('part-code').value = item.partCode || '';
+        document.getElementById('description-input').value = item.description || '';
+        document.getElementById('make').value = item.make || '';
+        document.getElementById('hsn').value = item.hsn || '';
+
+        // Handle category
+        const isCustomCategory = !['Mechanical', 'Electrical', 'Chemical', 'Miscellaneous'].includes(item.category);
+        document.getElementById('category').value = isCustomCategory ? 'Other' : item.category;
+        if (isCustomCategory) {
+          document.getElementById('category-other-container').style.display = 'block';
+          document.getElementById('category-other').value = item.category || '';
+        }
+
+        // Handle type
+        const isCustomType = !['Raw Material', 'Finished Goods', 'Semi-Finished', 'Consumables', 'Tools'].includes(item.type);
+        document.getElementById('type').value = isCustomType ? 'Other' : item.type;
+        if (isCustomType) {
+          document.getElementById('type-other-container').style.display = 'block';
+          document.getElementById('type-other').value = item.type || '';
+        }
+
+        // Handle UOM
+        const isCustomUOM = !['Pieces', 'Kg', 'Liters', 'Meters', 'Box', 'Set', 'Pair'].includes(item.uom);
+        document.getElementById('uom').value = isCustomUOM ? 'Other' : item.uom;
+        if (isCustomUOM) {
+          document.getElementById('uom-other-container').style.display = 'block';
+          document.getElementById('uom-other').value = item.uom || '';
+        }
+
+        document.getElementById('date').value = item.dateAdded || '';
+        currentItemId = itemId;
+        cancelBtn.style.display = 'flex';
+        updateQRCodePreview();
+      } catch (error) {
+        console.error("Error editing item: ", error);
+        appendMessage('Error loading item for editing.', 'bot');
+      }
+    }
+
+    // Edits a purchase record
+    async function editPurchase(purchaseId) {
+      try {
+        const doc = await db.collection('purchases').doc(purchaseId).get();
+        if (!doc.exists) {
+          appendMessage('Purchase record not found.', 'bot');
+          return;
+        }
+        const purchase = doc.data();
+        transactionType.value = 'purchase';
+        toggleFormFields();
+        document.getElementById('part-code').value = purchase.partCode || '';
+        document.getElementById('description-input').value = purchase.description || '';
+        document.getElementById('make').value = purchase.make || '';
+        document.getElementById('hsn').value = purchase.hsn || '';
+
+        // Handle category
+        const isCustomCategory = !['Mechanical', 'Electrical', 'Chemical', 'Miscellaneous'].includes(purchase.category);
+        document.getElementById('category').value = isCustomCategory ? 'Other' : purchase.category;
+        if (isCustomCategory) {
+          document.getElementById('category-other-container').style.display = 'block';
+          document.getElementById('category-other').value = purchase.category || '';
+        }
+
+        // Handle type
+        const isCustomType = !['Raw Material', 'Finished Goods', 'Semi-Finished', 'Consumables', 'Tools'].includes(purchase.type);
+        document.getElementById('type').value = isCustomType ? 'Other' : purchase.type;
+        if (isCustomType) {
+          document.getElementById('type-other-container').style.display = 'block';
+          document.getElementById('type-other').value = purchase.type || '';
+        }
+
+        // Handle UOM
+        const isCustomUOM = !['Pieces', 'Kg', 'Liters', 'Meters', 'Box', 'Set', 'Pair'].includes(purchase.uom);
+        document.getElementById('uom').value = isCustomUOM ? 'Other' : purchase.uom;
+        if (isCustomUOM) {
+          document.getElementById('uom-other-container').style.display = 'block';
+          document.getElementById('uom-other').value = purchase.uom || '';
+        }
+
+        document.getElementById('purchase-amount').value = purchase.purchaseAmount || '';
+        document.getElementById('purchase-qty').value = purchase.purchaseQty || '';
+        document.getElementById('purchase-from').value = purchase.purchaseFrom || '';
+        document.getElementById('date').value = purchase.date || '';
+        currentItemId = purchaseId;
+        cancelBtn.style.display = 'flex';
+        updateQRCodePreview();
+      } catch (error) {
+        console.error("Error editing purchase: ", error);
+        appendMessage('Error loading purchase for editing.', 'bot');
+      }
+    }
+
+    // Edits a sale record
+    async function editSale(saleId) {
+      try {
+        const doc = await db.collection('sales').doc(saleId).get();
+        if (!doc.exists) {
+          appendMessage('Sale record not found.', 'bot');
+          return;
+        }
+        const sale = doc.data();
+        transactionType.value = 'sale';
+        toggleFormFields();
+        document.getElementById('part-code').value = sale.partCode || '';
+        document.getElementById('description-input').value = sale.description || '';
+        document.getElementById('make').value = sale.make || '';
+        document.getElementById('hsn').value = sale.hsn || '';
+
+        // Handle category
+        const isCustomCategory = !['Mechanical', 'Electrical', 'Chemical', 'Miscellaneous'].includes(sale.category);
+        document.getElementById('category').value = isCustomCategory ? 'Other' : sale.category;
+        if (isCustomCategory) {
+          document.getElementById('category-other-container').style.display = 'block';
+          document.getElementById('category-other').value = sale.category || '';
+        }
+
+        // Handle type
+        const isCustomType = !['Raw Material', 'Finished Goods', 'Semi-Finished', 'Consumables', 'Tools'].includes(sale.type);
+        document.getElementById('type').value = isCustomType ? 'Other' : sale.type;
+        if (isCustomType) {
+          document.getElementById('type-other-container').style.display = 'block';
+          document.getElementById('type-other').value = sale.type || '';
+        }
+
+        // Handle UOM
+        const isCustomUOM = !['Pieces', 'Kg', 'Liters', 'Meters', 'Box', 'Set', 'Pair'].includes(sale.uom);
+        document.getElementById('uom').value = isCustomUOM ? 'Other' : sale.uom;
+        if (isCustomUOM) {
+          document.getElementById('uom-other-container').style.display = 'block';
+          document.getElementById('uom-other').value = sale.uom || '';
+        }
+
+        document.getElementById('sold-qty').value = sale.soldQty || '';
+        document.getElementById('sold-price').value = sale.soldPrice || '';
+        document.getElementById('sold-to').value = sale.soldTo || '';
+        document.getElementById('date').value = sale.date || '';
+        currentItemId = saleId;
+        cancelBtn.style.display = 'flex';
+        updateQRCodePreview();
+      } catch (error) {
+        console.error("Error editing sale: ", error);
+        appendMessage('Error loading sale for editing.', 'bot');
+      }
+    }
+
+    // Edits a material issue record
+    async function editMaterialIssue(issueId) {
+      try {
+        const doc = await db.collection('materialIssues').doc(issueId).get();
+        if (!doc.exists) {
+          appendMessage('Material issue record not found.', 'bot');
+          return;
+        }
+        const issue = doc.data();
+        transactionType.value = 'issue';
+        toggleFormFields();
+        document.getElementById('part-code').value = issue.partCode || '';
+        document.getElementById('description-input').value = issue.description || '';
+        document.getElementById('make').value = issue.make || '';
+        document.getElementById('hsn').value = issue.hsn || '';
+
+        // Handle category
+        const isCustomCategory = !['Mechanical', 'Electrical', 'Chemical', 'Miscellaneous'].includes(issue.category);
+        document.getElementById('category').value = isCustomCategory ? 'Other' : issue.category;
+        if (isCustomCategory) {
+          document.getElementById('category-other-container').style.display = 'block';
+          document.getElementById('category-other').value = issue.category || '';
+        }
+
+        // Handle type
+        const isCustomType = !['Raw Material', 'Finished Goods', 'Semi-Finished', 'Consumables', 'Tools'].includes(issue.type);
+        document.getElementById('type').value = isCustomType ? 'Other' : issue.type;
+        if (isCustomType) {
+          document.getElementById('type-other-container').style.display = 'block';
+          document.getElementById('type-other').value = issue.type || '';
+        }
+
+        // Handle UOM
+        const isCustomUOM = !['Pieces', 'Kg', 'Liters', 'Meters', 'Box', 'Set', 'Pair'].includes(issue.uom);
+        document.getElementById('uom').value = isCustomUOM ? 'Other' : issue.uom;
+        if (isCustomUOM) {
+          document.getElementById('uom-other-container').style.display = 'block';
+          document.getElementById('uom-other').value = issue.uom || '';
+        }
+
+        document.getElementById('issued-qty').value = issue.issuedQty || '';
+        document.getElementById('employee-name').value = issue.employeeName || '';
+        document.getElementById('employee-phone').value = issue.employeePhone || '';
+        document.getElementById('employee-position').value = issue.employeePosition || '';
+        document.getElementById('employee-code').value = issue.employeeCode || '';
+        document.getElementById('issue-remarks').value = issue.issueRemarks || '';
+        document.getElementById('date').value = issue.date || '';
+        currentItemId = issueId;
+        cancelBtn.style.display = 'flex';
+        updateQRCodePreview();
+      } catch (error) {
+        console.error("Error editing material issue: ", error);
+        appendMessage('Error loading material issue for editing.', 'bot');
+      }
+    }
+
+    // Deletes an inventory item
+    async function deleteItem(itemId) {
+      if (!confirm('Are you sure you want to delete this inventory item?')) return;
+      try {
+        await db.collection('inventory').doc(itemId).delete();
+        appendMessage('Inventory item deleted successfully.', 'bot');
+      } catch (error) {
+        console.error("Error deleting item: ", error);
+        appendMessage('Error deleting inventory item.', 'bot');
+      }
+    }
+
+    // Deletes multiple inventory items
+    async function deleteSelectedItems() {
+      if (selectedItems.length === 0) return;
+      if (!confirm(`Are you sure you want to delete ${selectedItems.length} selected inventory items?`)) return;
+
+      try {
+        const batch = db.batch();
+        selectedItems.forEach(id => {
+          batch.delete(db.collection('inventory').doc(id));
+        });
+        await batch.commit();
+        appendMessage(`${selectedItems.length} inventory items deleted successfully.`, 'bot');
+        selectedItems = [];
+        updateDeleteSelectedButton();
+      } catch (error) {
+        console.error("Error deleting selected items: ", error);
+        appendMessage('Error deleting selected inventory items.', 'bot');
+      }
+    }
+
+    // Deletes a purchase record
+    async function deletePurchase(purchaseId) {
+      if (!confirm('Are you sure you want to delete this purchase record?')) return;
+      try {
+        const purchaseDoc = await db.collection('purchases').doc(purchaseId).get();
+        if (!purchaseDoc.exists) {
+          appendMessage('Purchase record not found.', 'bot');
+          return;
+        }
+        const purchase = purchaseDoc.data();
+        const itemId = generateDocId(purchase.partCode, purchase.make, purchase.hsn);
+        const inventoryDoc = await db.collection('inventory').doc(itemId).get();
+        if (inventoryDoc.exists) {
+          const inventory = inventoryDoc.data();
+          const newPurchaseQty = (inventory.purchaseQty || 0) - (purchase.purchaseQty || 0);
+          const newAvailableQty = newPurchaseQty - (inventory.soldQty || 0) - (inventory.issuedQty || 0);
+          await db.collection('inventory').doc(itemId).update({
+            purchaseQty: newPurchaseQty,
+            availableQty: newAvailableQty,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        await db.collection('purchases').doc(purchaseId).delete();
+        appendMessage('Purchase record deleted successfully.', 'bot');
+      } catch (error) {
+        console.error("Error deleting purchase: ", error);
+        appendMessage('Error deleting purchase record.', 'bot');
+      }
+    }
+
+    // Deletes multiple purchase records
+    async function deleteSelectedPurchases() {
+      if (selectedPurchases.length === 0) return;
+      if (!confirm(`Are you sure you want to delete ${selectedPurchases.length} selected purchase records?`)) return;
+
+      try {
+        const batch = db.batch();
+        selectedPurchases.forEach(id => {
+          batch.delete(db.collection('purchases').doc(id));
+        });
+        await batch.commit();
+        appendMessage(`${selectedPurchases.length} purchase records deleted successfully.`, 'bot');
+        selectedPurchases = [];
+        updatePurchaseDeleteSelectedButton();
+      } catch (error) {
+        console.error("Error deleting selected purchases: ", error);
+        appendMessage('Error deleting selected purchase records.', 'bot');
+      }
+    }
+
+    // Deletes a sale record
+    async function deleteSale(saleId) {
+      if (!confirm('Are you sure you want to delete this sale record?')) return;
+      try {
+        const saleDoc = await db.collection('sales').doc(saleId).get();
+        if (!saleDoc.exists) {
+          appendMessage('Sale record not found.', 'bot');
+          return;
+        }
+        const sale = saleDoc.data();
+        const itemId = generateDocId(sale.partCode, sale.make, sale.hsn);
+        const inventoryDoc = await db.collection('inventory').doc(itemId).get();
+        if (inventoryDoc.exists) {
+          const inventory = inventoryDoc.data();
+          const newSoldQty = (inventory.soldQty || 0) - (sale.soldQty || 0);
+          const newAvailableQty = (inventory.purchaseQty || 0) - newSoldQty - (inventory.issuedQty || 0);
+          await db.collection('inventory').doc(itemId).update({
+            soldQty: newSoldQty,
+            availableQty: newAvailableQty,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        await db.collection('sales').doc(saleId).delete();
+        appendMessage('Sale record deleted successfully.', 'bot');
+      } catch (error) {
+        console.error("Error deleting sale: ", error);
+        appendMessage('Error deleting sale record.', 'bot');
+      }
+    }
+
+    // Deletes multiple sale records
+    async function deleteSelectedSales() {
+      if (selectedSales.length === 0) return;
+      if (!confirm(`Are you sure you want to delete ${selectedSales.length} selected sale records?`)) return;
+
+      try {
+        const batch = db.batch();
+        selectedSales.forEach(id => {
+          batch.delete(db.collection('sales').doc(id));
+        });
+        await batch.commit();
+        appendMessage(`${selectedSales.length} sale records deleted successfully.`, 'bot');
+        selectedSales = [];
+        updateSalesDeleteSelectedButton();
+      } catch (error) {
+        console.error("Error deleting selected sales: ", error);
+        appendMessage('Error deleting selected sale records.', 'bot');
+      }
+    }
+
+    // Deletes a material issue record
+    async function deleteMaterialIssue(issueId) {
+      if (!confirm('Are you sure you want to delete this material issue record?')) return;
+      try {
+        const issueDoc = await db.collection('materialIssues').doc(issueId).get();
+        if (!issueDoc.exists) {
+          appendMessage('Material issue record not found.', 'bot');
+          return;
+        }
+        const issue = issueDoc.data();
+        const itemId = generateDocId(issue.partCode, issue.make, issue.hsn);
+        const inventoryDoc = await db.collection('inventory').doc(itemId).get();
+        if (inventoryDoc.exists) {
+          const inventory = inventoryDoc.data();
+          const newIssuedQty = (inventory.issuedQty || 0) - (issue.issuedQty || 0);
+          const newAvailableQty = (inventory.purchaseQty || 0) - (inventory.soldQty || 0) - newIssuedQty;
+          await db.collection('inventory').doc(itemId).update({
+            issuedQty: newIssuedQty,
+            availableQty: newAvailableQty,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        await db.collection('materialIssues').doc(issueId).delete();
+        appendMessage('Material issue record deleted successfully.', 'bot');
+      } catch (error) {
+        console.error("Error deleting material issue: ", error);
+        appendMessage('Error deleting material issue record.', 'bot');
+      }
+    }
+
+    // Deletes multiple material issue records
+    async function deleteSelectedMaterialIssues() {
+      if (selectedMaterialIssues.length === 0) return;
+      if (!confirm(`Are you sure you want to delete ${selectedMaterialIssues.length} selected material issue records?`)) return;
+
+      try {
+        const batch = db.batch();
+        selectedMaterialIssues.forEach(id => {
+          batch.delete(db.collection('materialIssues').doc(id));
+        });
+        await batch.commit();
+        appendMessage(`${selectedMaterialIssues.length} material issue records deleted successfully.`, 'bot');
+        selectedMaterialIssues = [];
+        updateMaterialIssuesDeleteSelectedButton();
+      } catch (error) {
+        console.error("Error deleting selected material issues: ", error);
+        appendMessage('Error deleting selected material issue records.', 'bot');
+      }
+    }
+
+    // Shows item details
+    function showItemDetails(item) {
+      detailsContent.innerHTML = '';
+      inventorySection.style.display = 'none';
+      purchaseSection.style.display = 'none';
+      salesSection.style.display = 'none';
+      issueSlipSection.style.display = 'none';
+      detailsPanel.style.display = 'block';
+
+      const details = [
+        { label: 'Part Code', value: item.partCode },
+        { label: 'Description', value: item.description },
+        { label: 'Make', value: item.make },
+        { label: 'HSN', value: item.hsn },
+        { label: 'Category', value: item.category },
+        { label: 'Type', value: item.type },
+        { label: 'UOM', value: item.uom },
+        { label: 'Purchase Quantity', value: item.purchaseQty || 0 },
+        { label: 'Sold Quantity', value: item.soldQty || 0 },
+        { label: 'Issued Quantity', value: item.issuedQty || 0 },
+        { label: 'Available Quantity', value: item.availableQty || 0 },
+        { label: 'Date Added', value: item.dateAdded },
+        { label: 'Approval Status', value: item.approvalStatus || 'Pending' }
+      ];
+
+      details.forEach(detail => {
+        const div = document.createElement('div');
+        div.classList.add('detail-item');
+        div.innerHTML = `
+          <span class="detail-label">${detail.label}</span>
+          <div class="detail-value">${displayValue(detail.value)}</div>
+        `;
+        detailsContent.appendChild(div);
       });
-    }, error => {
-      console.error("Error fetching material issues: ", error);
-      issueSlipBody.innerHTML = '<tr><td colspan="11" class="loading-message">Error loading material issues.</td></tr>';
+    }
+
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+      const query = searchInput.value.toLowerCase();
+      const activeTab = document.querySelector('.tab-btn.active').id;
+      let rows;
+
+      if (activeTab === 'inventory-tab') {
+        rows = tableBody.querySelectorAll('tr');
+      } else if (activeTab === 'purchase-tab') {
+        rows = purchaseBody.querySelectorAll('tr');
+      } else if (activeTab === 'sales-tab') {
+        rows = salesBody.querySelectorAll('tr');
+      } else if (activeTab === 'issue-slip-tab') {
+        rows = issueSlipBody.querySelectorAll('tr');
+      }
+
+      rows.forEach(row => {
+        if (!row.querySelector('td')) return;
+        const text = Array.from(row.querySelectorAll('td'))
+          .slice(0, -1)
+          .map(cell => cell.textContent.toLowerCase())
+          .join(' ');
+        row.style.display = text.includes(query) ? '' : 'none';
+      });
     });
-}
 
-// Approves a material issue record
-async function approveMaterialIssue(issueId) {
-  try {
-    await db.collection('materialIssues').doc(issueId).update({ approvalStatus: 'Approved' });
-    appendMessage(`Material issue record ${issueId} approved.`, 'bot');
-  } catch (error) {
-    console.error("Error approving material issue:", error);
-    appendMessage("Error approving material issue.", 'bot');
-  }
-}
-
-// Rejects a material issue record
-async function rejectMaterialIssue(issueId) {
-  try {
-    await db.collection('materialIssues').doc(issueId).update({ approvalStatus: 'Rejected' });
-    appendMessage(`Material issue record ${issueId} rejected.`, 'bot');
-  } catch (error) {
-    console.error("Error rejecting material issue:", error);
-    appendMessage("Error rejecting material issue.", 'bot');
-  }
-}
-
-// Returns a material issue
-async function returnMaterialIssue(issueId, issue) {
-  try {
-    const existingItem = await getItemFromFirestore(issueId);
-    if (!existingItem) {
-      appendMessage('Inventory item not found for return.', 'bot');
-      return;
-    }
-
-    const returnedQty = issue.issuedQty || 0;
-    const newIssuedQty = (existingItem.issuedQty || 0) - returnedQty;
-    const newAvailableQty = (existingItem.availableQty || 0) + returnedQty;
-
-    await db.collection('inventory').doc(issueId).update({
-      issuedQty: newIssuedQty,
-      availableQty: newAvailableQty,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    // Chatbot toggle
+    chatbotToggle.addEventListener('click', () => {
+      chatbotWindow.style.display = chatbotWindow.style.display === 'none' ? 'flex' : 'none';
     });
 
-    await db.collection('materialIssues').doc(issueId).delete();
-    appendMessage(`Material issue ${issueId} returned successfully.`, 'bot');
-  } catch (error) {
-    console.error("Error returning material issue:", error);
-    appendMessage("Error returning material issue.", 'bot');
-  }
-}
+    // Chatbot mode toggle
+    chatbotModeToggle.addEventListener('click', () => {
+      isSupportMode = !isSupportMode;
+      chatbotModeToggle.textContent = isSupportMode ? 'Switch to Local Knowledge' : 'Switch to Support Mode';
+      chatbotTitle.textContent = isSupportMode ? 'Support Chatbot' : 'Local Knowledge Chatbot';
+      appendMessage(`Switched to ${isSupportMode ? 'Support' : 'Local Knowledge'} mode.`, 'bot');
+    });
 
-// Edits an inventory item
-async function editItem(itemId) {
-  try {
-    const doc = await db.collection('inventory').doc(itemId).get();
-    if (!doc.exists) {
-      appendMessage('Item not found.', 'bot');
-      return;
-    }
-    const item = doc.data();
-    transactionType.value = 'purchase';
-    toggleFormFields();
-    document.getElementById('part-code').value = item.partCode || '';
-    document.getElementById('description-input').value = item.description || '';
-    document.getElementById('make').value = item.make || '';
-    document.getElementById('hsn').value = item.hsn || '';
-    document.getElementById('category').value = item.category || 'Mechanical';
-    document.getElementById('type').value = item.type || 'Raw Material';
-    document.getElementById('uom').value = item.uom || 'Pieces';
-    document.getElementById('date').value = item.dateAdded || '';
-    currentItemId = itemId;
-    cancelBtn.style.display = 'flex';
-    updateQRCodePreview();
-  } catch (error) {
-    console.error("Error editing item: ", error);
-    appendMessage('Error loading item for editing.', 'bot');
-  }
-}
+    // Chatbot message sending
+    chatbotSend.addEventListener('click', sendChatbotMessage);
+    chatbotInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendChatbotMessage();
+    });
 
-// Edits a purchase record
-async function editPurchase(purchaseId) {
-  try {
-    const doc = await db.collection('purchases').doc(purchaseId).get();
-    if (!doc.exists) {
-      appendMessage('Purchase record not found.', 'bot');
-      return;
-    }
-    const purchase = doc.data();
-    transactionType.value = 'purchase';
-    toggleFormFields();
-    document.getElementById('part-code').value = purchase.partCode || '';
-    document.getElementById('description-input').value = purchase.description || '';
-    document.getElementById('make').value = purchase.make || '';
-    document.getElementById('hsn').value = purchase.hsn || '';
-    document.getElementById('category').value = purchase.category || 'Mechanical';
-    document.getElementById('type').value = purchase.type || 'Raw Material';
-    document.getElementById('uom').value = purchase.uom || 'Pieces';
-    document.getElementById('purchase-amount').value = purchase.purchaseAmount || '';
-    document.getElementById('purchase-qty').value = purchase.purchaseQty || '';
-    document.getElementById('purchase-from').value = purchase.purchaseFrom || '';
-    document.getElementById('date').value = purchase.date || '';
-    currentItemId = purchaseId;
-    cancelBtn.style.display = 'flex';
-    updateQRCodePreview();
-  } catch (error) {
-    console.error("Error editing purchase: ", error);
-    appendMessage('Error loading purchase for editing.', 'bot');
-  }
-}
+    async function sendChatbotMessage() {
+      const message = chatbotInput.value.trim();
+      if (!message) return;
 
-// Edits a sale record
-async function editSale(saleId) {
-  try {
-    const doc = await db.collection('sales').doc(saleId).get();
-    if (!doc.exists) {
-      appendMessage('Sale record not found.', 'bot');
-      return;
-    }
-    const sale = doc.data();
-    transactionType.value = 'sale';
-    toggleFormFields();
-    document.getElementById('part-code').value = sale.partCode || '';
-    document.getElementById('description-input').value = sale.description || '';
-    document.getElementById('make').value = sale.make || '';
-    document.getElementById('hsn').value = sale.hsn || '';
-    document.getElementById('category').value = sale.category || 'Mechanical';
-    document.getElementById('type').value = sale.type || 'Raw Material';
-    document.getElementById('uom').value = sale.uom || 'Pieces';
-    document.getElementById('sold-qty').value = sale.soldQty || '';
-    document.getElementById('sold-price').value = sale.soldPrice || '';
-    document.getElementById('sold-to').value = sale.soldTo || '';
-    document.getElementById('date').value = sale.date || '';
-    currentItemId = saleId;
-    cancelBtn.style.display = 'flex';
-    updateQRCodePreview();
-  } catch (error) {
-    console.error("Error editing sale: ", error);
-    appendMessage('Error loading sale for editing.', 'bot');
-  }
-}
+      appendMessage(message, 'user');
+      chatbotInput.value = '';
 
-// Edits a material issue record
-async function editMaterialIssue(issueId) {
-  try {
-    const doc = await db.collection('materialIssues').doc(issueId).get();
-    if (!doc.exists) {
-      appendMessage('Material issue record not found.', 'bot');
-      return;
-    }
-    const issue = doc.data();
-    transactionType.value = 'issue';
-    toggleFormFields();
-    document.getElementById('part-code').value = issue.partCode || '';
-    document.getElementById('description-input').value = issue.description || '';
-    document.getElementById('make').value = issue.make || '';
-    document.getElementById('hsn').value = issue.hsn || '';
-    document.getElementById('category').value = issue.category || 'Mechanical';
-    document.getElementById('type').value = issue.type || 'Raw Material';
-    document.getElementById('uom').value = issue.uom || 'Pieces';
-    document.getElementById('issued-qty').value = issue.issuedQty || '';
-    document.getElementById('employee-name').value = issue.employeeName || '';
-    document.getElementById('employee-phone').value = issue.employeePhone || '';
-    document.getElementById('employee-position').value = issue.employeePosition || '';
-    document.getElementById('employee-code').value = issue.employeeCode || '';
-    document.getElementById('issue-remarks').value = issue.issueRemarks || '';
-    document.getElementById('date').value = issue.date || '';
-    currentItemId = issueId;
-    cancelBtn.style.display = 'flex';
-    updateQRCodePreview();
-  } catch (error) {
-    console.error("Error editing material issue: ", error);
-    appendMessage('Error loading material issue for editing.', 'bot');
-  }
-}
-
-// Deletes an inventory item
-async function deleteItem(itemId) {
-  if (!confirm('Are you sure you want to delete this inventory item?')) return;
-  try {
-    await db.collection('inventory').doc(itemId).delete();
-    appendMessage('Inventory item deleted successfully.', 'bot');
-  } catch (error) {
-    console.error("Error deleting item: ", error);
-    appendMessage('Error deleting inventory item.', 'bot');
-  }
-}
-
-// Deletes a purchase record
-async function deletePurchase(purchaseId) {
-  if (!confirm('Are you sure you want to delete this purchase record?')) return;
-  try {
-    const purchaseDoc = await db.collection('purchases').doc(purchaseId).get();
-    if (!purchaseDoc.exists) {
-      appendMessage('Purchase record not found.', 'bot');
-      return;
-    }
-    const purchase = purchaseDoc.data();
-    const itemId = generateDocId(purchase.partCode, purchase.make, purchase.hsn);
-    const inventoryDoc = await db.collection('inventory').doc(itemId).get();
-    if (inventoryDoc.exists) {
-      const inventory = inventoryDoc.data();
-      const newPurchaseQty = (inventory.purchaseQty || 0) - (purchase.purchaseQty || 0);
-      const newAvailableQty = newPurchaseQty - (inventory.soldQty || 0) - (inventory.issuedQty || 0);
-      await db.collection('inventory').doc(itemId).update({
-        purchaseQty: newPurchaseQty,
-        availableQty: newAvailableQty,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-    await db.collection('purchases').doc(purchaseId).delete();
-    appendMessage('Purchase record deleted successfully.', 'bot');
-  } catch (error) {
-    console.error("Error deleting purchase: ", error);
-    appendMessage('Error deleting purchase record.', 'bot');
-  }
-}
-
-// Deletes a sale record
-async function deleteSale(saleId) {
-  if (!confirm('Are you sure you want to delete this sale record?')) return;
-  try {
-    const saleDoc = await db.collection('sales').doc(saleId).get();
-    if (!saleDoc.exists) {
-      appendMessage('Sale record not found.', 'bot');
-      return;
-    }
-    const sale = saleDoc.data();
-    const itemId = generateDocId(sale.partCode, sale.make, sale.hsn);
-    const inventoryDoc = await db.collection('inventory').doc(itemId).get();
-    if (inventoryDoc.exists) {
-      const inventory = inventoryDoc.data();
-      const newSoldQty = (inventory.soldQty || 0) - (sale.soldQty || 0);
-      const newAvailableQty = (inventory.purchaseQty || 0) - newSoldQty - (inventory.issuedQty || 0);
-      await db.collection('inventory').doc(itemId).update({
-        soldQty: newSoldQty,
-        availableQty: newAvailableQty,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-    await db.collection('sales').doc(saleId).delete();
-    appendMessage('Sale record deleted successfully.', 'bot');
-  } catch (error) {
-    console.error("Error deleting sale: ", error);
-    appendMessage('Error deleting sale record.', 'bot');
-  }
-}
-
-// Deletes a material issue record
-async function deleteMaterialIssue(issueId) {
-  if (!confirm('Are you sure you want to delete this material issue record?')) return;
-  try {
-    const issueDoc = await db.collection('materialIssues').doc(issueId).get();
-    if (!issueDoc.exists) {
-      appendMessage('Material issue record not found.', 'bot');
-      return;
-    }
-    const issue = issueDoc.data();
-    const itemId = generateDocId(issue.partCode, issue.make, issue.hsn);
-    const inventoryDoc = await db.collection('inventory').doc(itemId).get();
-    if (inventoryDoc.exists) {
-      const inventory = inventoryDoc.data();
-      const newIssuedQty = (inventory.issuedQty || 0) - (issue.issuedQty || 0);
-      const newAvailableQty = (inventory.purchaseQty || 0) - (inventory.soldQty || 0) - newIssuedQty;
-      await db.collection('inventory').doc(itemId).update({
-        issuedQty: newIssuedQty,
-        availableQty: newAvailableQty,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-    await db.collection('materialIssues').doc(issueId).delete();
-    appendMessage('Material issue record deleted successfully.', 'bot');
-  } catch (error) {
-    console.error("Error deleting material issue: ", error);
-    appendMessage('Error deleting material issue record.', 'bot');
-  }
-}
-
-// Shows item details
-function showItemDetails(item) {
-  detailsContent.innerHTML = '';
-  inventorySection.style.display = 'none';
-  purchaseSection.style.display = 'none';
-  salesSection.style.display = 'none';
-  issueSlipSection.style.display = 'none';
-  detailsPanel.style.display = 'block';
-
-  const details = [
-    { label: 'Part Code', value: item.partCode },
-    { label: 'Description', value: item.description },
-    { label: 'Make', value: item.make },
-    { label: 'HSN', value: item.hsn },
-    { label: 'Category', value: item.category },
-    { label: 'Type', value: item.type },
-    { label: 'UOM', value: item.uom },
-    { label: 'Purchase Quantity', value: item.purchaseQty || 0 },
-    { label: 'Sold Quantity', value: item.soldQty || 0 },
-    { label: 'Issued Quantity', value: item.issuedQty || 0 },
-    { label: 'Available Quantity', value: item.availableQty || 0 },
-    { label: 'Date Added', value: item.dateAdded },
-    { label: 'Approval Status', value: item.approvalStatus || 'Pending' }
-  ];
-
-  details.forEach(detail => {
-    const div = document.createElement('div');
-    div.classList.add('detail-item');
-    div.innerHTML = `
-      <span class="detail-label">${detail.label}</span>
-      <div class="detail-value">${displayValue(detail.value)}</div>
-    `;
-    detailsContent.appendChild(div);
-  });
-}
-
-// Search functionality
-searchInput.addEventListener('input', function() {
-  const query = searchInput.value.toLowerCase();
-  const activeTab = document.querySelector('.tab-btn.active').id;
-  let rows;
-
-  if (activeTab === 'inventory-tab') {
-    rows = tableBody.querySelectorAll('tr');
-  } else if (activeTab === 'purchase-tab') {
-    rows = purchaseBody.querySelectorAll('tr');
-  } else if (activeTab === 'sales-tab') {
-    rows = salesBody.querySelectorAll('tr');
-  } else if (activeTab === 'issue-slip-tab') {
-    rows = issueSlipBody.querySelectorAll('tr');
-  }
-
-  rows.forEach(row => {
-    if (!row.querySelector('td')) return;
-    const text = Array.from(row.querySelectorAll('td'))
-      .slice(0, -1)
-      .map(cell => cell.textContent.toLowerCase())
-      .join(' ');
-    row.style.display = text.includes(query) ? '' : 'none';
-  });
-});
-
-// Chatbot toggle
-chatbotToggle.addEventListener('click', () => {
-  chatbotWindow.style.display = chatbotWindow.style.display === 'none' ? 'flex' : 'none';
-});
-
-// Chatbot mode toggle
-chatbotModeToggle.addEventListener('click', () => {
-  isSupportMode = !isSupportMode;
-  chatbotModeToggle.textContent = isSupportMode ? 'Switch to Local Knowledge' : 'Switch to Support Mode';
-  chatbotTitle.textContent = isSupportMode ? 'Support Chatbot' : 'Local Knowledge Chatbot';
-  appendMessage(`Switched to ${isSupportMode ? 'Support' : 'Local Knowledge'} mode.`, 'bot');
-});
-
-// Chatbot message sending
-chatbotSend.addEventListener('click', sendChatbotMessage);
-chatbotInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') sendChatbotMessage();
-});
-
-async function sendChatbotMessage() {
-  const message = chatbotInput.value.trim();
-  if (!message) return;
-
-  appendMessage(message, 'user');
-  chatbotInput.value = '';
-
-  if (isSupportMode) {
-    appendMessage('This is a support query. Please contact our support team at support@technomens.com.', 'bot');
-  } else {
-    if (message.toLowerCase().includes('inventory')) {
-      const snapshot = await db.collection('inventory').get();
-      const count = snapshot.size;
-      appendMessage(`There are currently ${count} items in the inventory.`, 'bot');
-    } else if (message.toLowerCase().includes('purchase bill')) {
-      const match = message.match(/purchase bill (\S+)/i);
-      if (match) {
-        await downloadPurchaseBill(match[1]);
+      if (isSupportMode) {
+        appendMessage('This is a support query. Please contact our support team at support@technomens.com.', 'bot');
       } else {
-        appendMessage('Please provide a purchase ID, e.g., "purchase bill ABC123".', 'bot');
+        if (message.toLowerCase().includes('inventory')) {
+          const snapshot = await db.collection('inventory').get();
+          const count = snapshot.size;
+          appendMessage(`There are currently ${count} items in the inventory.`, 'bot');
+        } else if (message.toLowerCase().includes('purchase bill')) {
+          const match = message.match(/purchase bill (\S+)/i);
+          if (match) {
+            await downloadPurchaseBill(match[1]);
+          } else {
+            appendMessage('Please provide a purchase ID, e.g., "purchase bill ABC123".', 'bot');
+          }
+        } else if (message.toLowerCase().includes('sales invoice')) {
+          const match = message.match(/sales invoice (\S+)/i);
+          if (match) {
+            await downloadSalesBill(match[1]);
+          } else {
+            appendMessage('Please provide a sale ID, e.g., "sales invoice XYZ789".', 'bot');
+          }
+        } else {
+          appendMessage('I can help with inventory counts or generating bills. Try asking about "inventory" or "purchase bill <ID>".', 'bot');
+        }
       }
-    } else if (message.toLowerCase().includes('sales invoice')) {
-      const match = message.match(/sales invoice (\S+)/i);
-      if (match) {
-        await downloadSalesBill(match[1]);
-      } else {
-        appendMessage('Please provide a sale ID, e.g., "sales invoice XYZ789".', 'bot');
-      }
-    } else {
-      appendMessage('I can help with inventory counts or generating bills. Try asking about "inventory" or "purchase bill <ID>".', 'bot');
     }
-  }
-}
 
-// Cleanup on page unload
-window.addEventListener('unload', () => {
-  if (unsubscribeItems) unsubscribeItems();
-  if (unsubscribePurchases) unsubscribePurchases();
-  if (unsubscribeSales) unsubscribeSales();
-  if (unsubscribeMaterialIssues) unsubscribeMaterialIssues();
-});
-</script>
+    // Toggle select mode for inventory items
+    selectModeBtn.addEventListener('click', () => {
+      isSelectMode = !isSelectMode;
+      selectModeBtn.innerHTML = isSelectMode ?
+        '<i class="fas fa-times"></i> Cancel Selection' :
+        '<i class="fas fa-check-square"></i> Select Items';
+      updateDeleteSelectedButton();
+    });
+
+    // Toggle select mode for purchases
+    purchaseSelectModeBtn.addEventListener('click', () => {
+      isSelectMode = !isSelectMode;
+      purchaseSelectModeBtn.innerHTML = isSelectMode ?
+        '<i class="fas fa-times"></i> Cancel Selection' :
+        '<i class="fas fa-check-square"></i> Select Items';
+      updatePurchaseDeleteSelectedButton();
+    });
+
+    // Toggle select mode for sales
+    salesSelectModeBtn.addEventListener('click', () => {
+      isSelectMode = !isSelectMode;
+      salesSelectModeBtn.innerHTML = isSelectMode ?
+        '<i class="fas fa-times"></i> Cancel Selection' :
+        '<i class="fas fa-check-square"></i> Select Items';
+      updateSalesDeleteSelectedButton();
+    });
+
+    // Toggle select mode for material issues
+    issueSlipSelectModeBtn.addEventListener('click', () => {
+      isSelectMode = !isSelectMode;
+      issueSlipSelectModeBtn.innerHTML = isSelectMode ?
+        '<i class="fas fa-times"></i> Cancel Selection' :
+        '<i class="fas fa-check-square"></i> Select Items';
+      updateMaterialIssuesDeleteSelectedButton();
+    });
+
+    // Update delete selected button visibility for inventory
+    function updateDeleteSelectedButton() {
+      deleteSelectedBtn.style.display = selectedItems.length > 0 ? 'flex' : 'none';
+      deleteSelectedBtn.innerHTML = `<i class="fas fa-trash"></i> Delete ${selectedItems.length} Selected`;
+    }
+
+    // Update delete selected button visibility for purchases
+    function updatePurchaseDeleteSelectedButton() {
+      purchaseDeleteSelectedBtn.style.display = selectedPurchases.length > 0 ? 'flex' : 'none';
+      purchaseDeleteSelectedBtn.innerHTML = `<i class="fas fa-trash"></i> Delete ${selectedPurchases.length} Selected`;
+    }
+
+    // Update delete selected button visibility for sales
+    function updateSalesDeleteSelectedButton() {
+      salesDeleteSelectedBtn.style.display = selectedSales.length > 0 ? 'flex' : 'none';
+      salesDeleteSelectedBtn.innerHTML = `<i class="fas fa-trash"></i> Delete ${selectedSales.length} Selected`;
+    }
+
+    // Update delete selected button visibility for material issues
+    function updateMaterialIssuesDeleteSelectedButton() {
+      issueSlipDeleteSelectedBtn.style.display = selectedMaterialIssues.length > 0 ? 'flex' : 'none';
+      issueSlipDeleteSelectedBtn.innerHTML = `<i class="fas fa-trash"></i> Delete ${selectedMaterialIssues.length} Selected`;
+    }
+
+    // Delete selected inventory items
+    deleteSelectedBtn.addEventListener('click', deleteSelectedItems);
+
+    // Delete selected purchases
+    purchaseDeleteSelectedBtn.addEventListener('click', deleteSelectedPurchases);
+
+    // Delete selected sales
+    salesDeleteSelectedBtn.addEventListener('click', deleteSelectedSales);
+
+    // Delete selected material issues
+    issueSlipDeleteSelectedBtn.addEventListener('click', deleteSelectedMaterialIssues);
+
+    // Cleanup on page unload
+    window.addEventListener('unload', () => {
+      if (unsubscribeItems) unsubscribeItems();
+      if (unsubscribePurchases) unsubscribePurchases();
+      if (unsubscribeSales) unsubscribeSales();
+      if (unsubscribeMaterialIssues) unsubscribeMaterialIssues();
+    });
+  </script>
 </body>
 </html>
